@@ -29,8 +29,8 @@ export type DocumentModel = {
   face: 'serif' | 'sans';
   path?: string;
   pages: PageContent[];
-  /** Raw payload for format-specific renderers (PDF ArrayBuffer, etc.) */
-  raw?: ArrayBuffer | string;
+  /** Raw payload for format-specific renderers (PDF bytes, etc.) */
+  raw?: ArrayBuffer | Uint8Array | string;
   toc?: TocItem[];
   tags?: string[];
   folder?: string;

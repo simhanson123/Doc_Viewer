@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ContentBlock, DocumentModel, ThemeTokens, Tool } from '@/types';
 import { renderPdfPage } from '@/lib/loaders/pdf';
 
@@ -24,8 +24,24 @@ export function PageBody({
   const page = doc.pages[pageIndex];
   if (!page) return null;
 
-  if (page.kind === 'pdf' && doc.raw instanceof ArrayBuffer) {
-    return <PdfPage data={doc.raw} pageIndex={page.pageIndex} />;
+  if (page.kind === 'pdf' && doc.raw) {
+    const raw = doc.raw;
+    let buf: ArrayBuffer | null = null;
+    if (raw instanceof ArrayBuffer) {
+      buf = raw;
+    } else if (raw instanceof Uint8Array) {
+      const copy = new Uint8Array(raw.byteLength);
+      copy.set(raw);
+      buf = copy.buffer;
+    }
+    if (buf && buf.byteLength > 0) {
+      return <PdfPage data={buf} pageIndex={page.pageIndex} />;
+    }
+    return (
+      <div className="page-content pdf-content" style={{ color: theme.muted, padding: 24 }}>
+        PDF data missing — re-open the file.
+      </div>
+    );
   }
 
   if (page.kind === 'image') {
@@ -73,16 +89,25 @@ export function PageBody({
 
 function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     const canvas = canvasRef.current;
     if (!canvas) return;
+    setBusy(true);
+    setErr(null);
     (async () => {
       try {
         await renderPdfPage(data, pageIndex, canvas);
+        if (!cancelled) setBusy(false);
       } catch (e) {
-        if (!cancelled) console.error(e);
+        console.error('[onjeom] PDF render failed', e);
+        if (!cancelled) {
+          setBusy(false);
+          setErr(e instanceof Error ? e.message : String(e));
+        }
       }
     })();
     return () => {
@@ -91,8 +116,42 @@ function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) 
   }, [data, pageIndex]);
 
   return (
-    <div className="page-content pdf-content">
+    <div className="page-content pdf-content" style={{ position: 'relative' }}>
       <canvas ref={canvasRef} />
+      {busy && !err && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#8c7f69',
+            fontSize: 13,
+            pointerEvents: 'none',
+          }}
+        >
+          Loading PDF…
+        </div>
+      )}
+      {err && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            textAlign: 'center',
+            color: '#a04030',
+            fontSize: 13,
+            background: 'rgba(255,255,255,0.92)',
+          }}
+        >
+          PDF render error: {err}
+        </div>
+      )}
     </div>
   );
 }

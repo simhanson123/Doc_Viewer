@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DocAnn, DocFormat, DocumentModel, ShapeKind, Tool, ViewMode } from '@/types';
 import { FMT_COLORS, NOTE_COLORS, PAGE_W, THEMES } from '@/types';
-import { buildSampleDocs } from '@/lib/sampleDocs';
 import { loadDocument } from '@/lib/loaders';
 import { useAnnotations } from '@/hooks/useAnnotations';
 import { useSettings } from '@/hooks/useSettings';
@@ -74,19 +73,9 @@ function AppShell({
   reset: ReturnType<typeof useSettings>['reset'];
 }) {
   const { t } = useI18n();
-  const samples = useMemo(() => buildSampleDocs(), []);
-  const [library, setLibrary] = useState<DocumentModel[]>(() => {
-    const meta = loadLibMeta();
-    return samples.map((d) => ({
-      ...d,
-      folder: meta[d.id]?.folder ?? d.folder ?? '미분류',
-      tags: meta[d.id]?.tags ?? d.tags,
-      favorite: meta[d.id]?.favorite ?? d.favorite,
-      lastOpened: meta[d.id]?.lastOpened,
-      addedAt: d.addedAt ?? Date.now(),
-    }));
-  });
-  const [docId, setDocId] = useState(samples[0]?.id ?? '');
+  /** User-opened documents only — no built-in sample library */
+  const [library, setLibrary] = useState<DocumentModel[]>([]);
+  const [docId, setDocId] = useState('');
   const [page, setPage] = useState(0);
   const [mode, setMode] = useState<ViewMode>('single');
   const [zoom, setZoom] = useState(1);
@@ -531,13 +520,77 @@ function AppShell({
     return Array.from(set);
   }, [library]);
 
-  if (!doc) {
-    return <div className="app-shell">문서가 없습니다.</div>;
-  }
-
-  const len = doc.pages.length;
+  const len = doc?.pages.length ?? 0;
   const ann = annApi.ann;
-  const marked = (ann.marks || []).includes(page);
+  const marked = doc ? (ann.marks || []).includes(page) : false;
+
+  // Empty library: still show chrome + open prompt (no sample docs)
+  if (!doc) {
+    return (
+      <div
+        className={`app-shell theme-${settings.readingTheme}${settings.compactUi ? ' compact' : ''}${isAndroid() ? ' android' : ''}`}
+        style={{ background: theme.desk, color: theme.chromeText }}
+      >
+        <header
+          className="topbar"
+          style={{ background: theme.chrome, borderColor: theme.chromeBorder }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div className="logo-dot" style={{ background: accent }} />
+            <div className="brand" style={{ color: theme.ink }}>
+              {t('appName')}
+            </div>
+          </div>
+          <div style={{ flex: 1 }} />
+          <button type="button" className="open-btn" onClick={() => void openFile()}>
+            {t('openDoc')}
+          </button>
+          <button type="button" className="open-btn" onClick={() => setSettingsOpen(true)}>
+            {t('settings')}
+          </button>
+        </header>
+        <main
+          className="desk"
+          style={{
+            background: theme.desk,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: 16,
+            padding: 40,
+          }}
+        >
+          <div style={{ fontSize: 18, fontWeight: 600, color: theme.ink }}>{t('emptyDoc')}</div>
+          <div style={{ fontSize: 13, color: theme.muted, textAlign: 'center', maxWidth: 360 }}>
+            PDF · MD · EPUB · DOCX · TXT
+          </div>
+          <button
+            type="button"
+            className="open-btn primary"
+            style={{ background: accent, color: '#fff', padding: '12px 28px', fontSize: 14 }}
+            onClick={() => void openFile()}
+          >
+            {t('openDoc')}
+          </button>
+          {(loading || error) && (
+            <div style={{ marginTop: 12, color: error ? '#a04030' : theme.muted }}>
+              {error || t('loading')}
+            </div>
+          )}
+        </main>
+        <SettingsModal
+          open={settingsOpen}
+          settings={settings}
+          onClose={() => setSettingsOpen(false)}
+          onPatch={patch}
+          onPickAnnFolder={() => void pickAnnFolder()}
+          onReset={reset}
+        />
+        {toast && <div className="toast">{toast}</div>}
+      </div>
+    );
+  }
 
   const visible =
     mode === 'spread'

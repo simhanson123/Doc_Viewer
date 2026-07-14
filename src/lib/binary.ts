@@ -1,11 +1,14 @@
 /** Decode payloads coming from Electron IPC, File API, or raw buffers. */
 
 export function base64ToArrayBuffer(b64: string): ArrayBuffer {
-  const binary = atob(b64);
+  // Strip whitespace / data-URL prefix if present
+  const clean = b64.replace(/^data:[^;]+;base64,/, '').replace(/\s/g, '');
+  const binary = atob(clean);
   const len = binary.length;
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
+  // Ensure we return a pure ArrayBuffer (not SharedArrayBuffer view quirks)
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 }
 
 export function toArrayBuffer(
