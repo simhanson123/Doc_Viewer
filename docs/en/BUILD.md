@@ -41,6 +41,7 @@ Protocol:               privileged (fetch + workers + CORS)
 Open file IPC:          always base64(raw bytes)
 Text decode:            renderer TextDecoder (no Node require)
 PDF worker:             fetch → Blob URL, else IPC pdfWorkerBase64 from main
+Encrypted PDF:          password dialog in renderer → reload with password
 ```
 
 Do **not** load the UI via raw `file://…/app.asar/…` — workers break.
@@ -50,12 +51,30 @@ Do **not** load the UI via raw `file://…/app.asar/…` — workers break.
 - Menu **Help → Path diagnostics…**
 - **View → Developer tools** — logs prefixed with `[onjeom]`
 
-## Tests
+## Verification / QA (not product features)
+
+These commands **check** the app. They are **not** features shipped inside the user EXE.
+
+| Command | Purpose |
+|---------|---------|
+| `npm run typecheck` | TypeScript |
+| `npm run test:loaders` | Encoding / PDF header / DOCX / base64 offline |
+| `npm run test:formats` | Generate + exercise PDF/EPUB/DOCX/PPTX/HTML fixtures |
+| `npm run smoke:packaged` | Boot packaged EXE (blank-UI guard) |
+| `npm run test:e2e` | **Playwright** Electron E2E — formats, password PDF, core UI flows |
+| `npm run release:win` | Full gate: typecheck → loaders → formats → build → smoke → e2e |
 
 ```bash
-npm run test:loaders   # ASCII/UTF-8/CP949/SJIS/GBK/PDF/DOCX/base64
 npm run typecheck
+npm run test:loaders
+npm run test:formats
+npm run smoke:packaged
+npm run test:e2e
+# or everything:
+npm run release:win
 ```
+
+> **Playwright** is a **QA tool** for developers/CI. End users do not need it and it is not an in-app feature.
 
 ## Linux / Android
 
@@ -68,10 +87,27 @@ npm run android:sync && npm run android:open
 ## Releases
 
 ```bash
-npm run electron:build:win
+npm run release:win
 git tag -a vX.Y.Z -m "…"
 git push origin main --tags
 gh release create vX.Y.Z release/*-win* --title "…" --notes "…"
 ```
+
+## Docs sync & screenshots
+
+After changing product behavior, update `scripts/sync-locale-docs.mjs` then:
+
+```bash
+npm run docs:sync
+```
+
+Refresh UI images for GitHub (requires packaged EXE):
+
+```bash
+npm run electron:build:win
+npm run screenshots
+```
+
+Output: `docs/screenshots/*.png`
 
 ← [Overview](./README.md) · [User guide](./USER_GUIDE.md)
