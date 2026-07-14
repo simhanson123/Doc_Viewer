@@ -16,6 +16,7 @@ import {
   isTouchPrimary,
   platformOpenFiles,
   platformOpenJson,
+  platformOpenPaths,
   platformPickFolder,
   platformSaveBinary,
   platformSaveText,
@@ -231,6 +232,18 @@ function AppShell({
       console.error(e);
       setError(e instanceof Error ? e.message : '파일을 열 수 없습니다.');
     }
+  }, [ingestFiles]);
+
+  // Playwright E2E: window.__onjeomE2EOpen(['C:\\path\\file.pdf'])
+  useEffect(() => {
+    (window as unknown as { __onjeomE2EOpen?: (paths: string[]) => Promise<void> }).__onjeomE2EOpen =
+      async (paths: string[]) => {
+        const list = await platformOpenPaths(paths);
+        if (list?.length) await ingestFiles(list);
+      };
+    return () => {
+      delete (window as unknown as { __onjeomE2EOpen?: unknown }).__onjeomE2EOpen;
+    };
   }, [ingestFiles]);
 
   const exportPdf = useCallback(async () => {
@@ -552,19 +565,26 @@ function AppShell({
       <div
         className={`app-shell theme-${settings.readingTheme}${settings.compactUi ? ' compact' : ''}${isAndroid() ? ' android' : ''}`}
         style={{ background: theme.desk, color: theme.chromeText }}
+        data-testid="app-shell-empty"
       >
         <header
           className="topbar"
           style={{ background: theme.chrome, borderColor: theme.chromeBorder }}
+          data-testid="topbar"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div className="logo-dot" style={{ background: accent }} />
-            <div className="brand" style={{ color: theme.ink }}>
+            <div className="brand" style={{ color: theme.ink }} data-testid="brand">
               {t('appName')}
             </div>
           </div>
           <div style={{ flex: 1 }} />
-          <button type="button" className="open-btn" onClick={() => void openFile()}>
+          <button
+            type="button"
+            className="open-btn"
+            data-testid="open-doc"
+            onClick={() => void openFile()}
+          >
             {t('openDoc')}
           </button>
           <button type="button" className="open-btn" onClick={() => setSettingsOpen(true)}>
@@ -573,6 +593,7 @@ function AppShell({
         </header>
         <main
           className="desk"
+          data-testid="empty-desk"
           style={{
             background: theme.desk,
             display: 'flex',
@@ -583,13 +604,19 @@ function AppShell({
             padding: 40,
           }}
         >
-          <div style={{ fontSize: 18, fontWeight: 600, color: theme.ink }}>{t('emptyDoc')}</div>
+          <div
+            style={{ fontSize: 18, fontWeight: 600, color: theme.ink }}
+            data-testid="empty-title"
+          >
+            {t('emptyDoc')}
+          </div>
           <div style={{ fontSize: 13, color: theme.muted, textAlign: 'center', maxWidth: 360 }}>
             PDF · MD · EPUB · DOCX · TXT
           </div>
           <button
             type="button"
             className="open-btn primary"
+            data-testid="open-doc-primary"
             style={{ background: accent, color: '#fff', padding: '12px 28px', fontSize: 14 }}
             onClick={() => void openFile()}
           >
@@ -665,29 +692,33 @@ function AppShell({
     <div
       className={`app-shell theme-${settings.readingTheme}${settings.compactUi ? ' compact' : ''}${isAndroid() ? ' android' : ''}`}
       style={{ background: theme.desk, color: theme.chromeText }}
+      data-testid="app-shell"
+      data-doc-fmt={doc.fmt}
+      data-doc-pages={String(len)}
     >
       <header
         className="topbar"
         style={{ background: theme.chrome, borderColor: theme.chromeBorder }}
+        data-testid="topbar"
       >
         <button type="button" className="top-btn" title={t('library')} onClick={() => setSidebar((s) => !s)}>
           <IconMenu />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div className="logo-dot" style={{ background: accent }} />
-          <div className="brand" style={{ color: theme.ink }}>
+          <div className="brand" style={{ color: theme.ink }} data-testid="brand">
             {t('appName')}
           </div>
         </div>
         <div className="v-div" style={{ background: theme.chromeBorder }} />
-        <span className="fmt-chip" style={{ background: FMT_COLORS[doc.fmt] }}>
+        <span className="fmt-chip" style={{ background: FMT_COLORS[doc.fmt] }} data-testid="fmt-chip">
           {doc.fmt}
         </span>
-        <div className="doc-title" style={{ color: theme.chromeText }}>
+        <div className="doc-title" style={{ color: theme.chromeText }} data-testid="doc-title">
           {doc.title}
         </div>
         <div style={{ flex: 1 }} />
-        <button type="button" className="open-btn" onClick={() => void openFile()}>
+        <button type="button" className="open-btn" data-testid="open-doc" onClick={() => void openFile()}>
           {t('openDoc')}
         </button>
         <button type="button" className="open-btn" onClick={() => void exportPdf()} disabled={exporting}>

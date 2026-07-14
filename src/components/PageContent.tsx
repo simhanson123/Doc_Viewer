@@ -66,6 +66,8 @@ export function PageBody({
     <div
       className={`page-content${doc.face === 'sans' ? ' face-sans' : ''}`}
       style={{ fontSize: `${fontScale}em`, fontFamily: face }}
+      data-testid="page-content"
+      data-page-kind="blocks"
     >
       {page.blocks.map((b, bi) => (
         <BlockView
@@ -116,10 +118,18 @@ function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) 
   }, [data, pageIndex]);
 
   return (
-    <div className="page-content pdf-content" style={{ position: 'relative' }}>
-      <canvas ref={canvasRef} />
+    <div
+      className="page-content pdf-content"
+      style={{ position: 'relative' }}
+      data-testid="page-content"
+      data-page-kind="pdf"
+      data-pdf-busy={busy ? '1' : '0'}
+      data-pdf-error={err ? '1' : '0'}
+    >
+      <canvas ref={canvasRef} data-testid="pdf-canvas" />
       {busy && !err && (
         <div
+          data-testid="pdf-loading"
           style={{
             position: 'absolute',
             inset: 0,
@@ -136,6 +146,7 @@ function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) 
       )}
       {err && (
         <div
+          data-testid="pdf-error"
           style={{
             position: 'absolute',
             inset: 0,

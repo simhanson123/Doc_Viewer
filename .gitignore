@@ -3,6 +3,9 @@ dist
 dist-electron
 release
 test-fixtures
+e2e/fixtures
+test-results
+playwright-report
 ios
 *.log
 .DS_Store

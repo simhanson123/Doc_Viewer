@@ -564,6 +564,25 @@ ipcMain.handle('dialog:openFile', async () => {
 
 ipcMain.handle('fs:readFile', async (_e, filePath: string) => readDocument(filePath));
 
+/** Open files by absolute path (E2E / automation — no native dialog). */
+ipcMain.handle('fs:openPaths', async (_e, filePaths: string[]) => {
+  if (!Array.isArray(filePaths) || !filePaths.length) return null;
+  const files: OpenedDoc[] = [];
+  for (const p of filePaths) {
+    if (typeof p !== 'string' || !p.trim()) continue;
+    const abs = path.resolve(p);
+    if (!existsSync(abs)) {
+      throw new Error(`File not found: ${abs}`);
+    }
+    files.push(await readDocument(abs));
+  }
+  console.log(
+    '[onjeom] openPaths ok',
+    files.map((f) => ({ name: f.name, ext: f.ext, bytes: f.byteLength })),
+  );
+  return files.length ? files : null;
+});
+
 ipcMain.handle(
   'dialog:saveFile',
   async (

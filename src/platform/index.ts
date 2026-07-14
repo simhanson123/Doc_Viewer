@@ -47,6 +47,26 @@ export function isTouchPrimary() {
   );
 }
 
+function mapOpened(
+  list: {
+    path?: string;
+    name: string;
+    ext: string;
+    data: string | ArrayBuffer;
+    isText: boolean;
+    encoding?: 'utf8' | 'base64';
+  }[],
+): PickedFile[] {
+  return list.map((f) => ({
+    path: f.path,
+    name: f.name,
+    ext: f.ext,
+    data: f.data,
+    isText: f.isText,
+    encoding: f.encoding || (f.isText ? 'utf8' : 'base64'),
+  }));
+}
+
 /** Open one or more documents. Always prefers Electron native dialog when bridge is up. */
 export async function platformOpenFiles(): Promise<PickedFile[] | null> {
   // Probe bridge
@@ -58,20 +78,24 @@ export async function platformOpenFiles(): Promise<PickedFile[] | null> {
       const raw = await window.onjeom.openFile();
       if (!raw) return null;
       const list = Array.isArray(raw) ? raw : [raw];
-      return list.map((f) => ({
-        path: f.path,
-        name: f.name,
-        ext: f.ext,
-        data: f.data,
-        isText: f.isText,
-        encoding: f.encoding || (f.isText ? 'utf8' : 'base64'),
-      }));
+      return mapOpened(list);
     } catch (e) {
       console.error('[onjeom] native openFile failed, falling back to input', e);
       // fall through to HTML picker
     }
   }
   return pickViaInput(true);
+}
+
+/** Open absolute paths without a dialog (Playwright E2E / automation). */
+export async function platformOpenPaths(filePaths: string[]): Promise<PickedFile[] | null> {
+  if (!window.onjeom?.openPaths) {
+    throw new Error('openPaths requires Electron bridge');
+  }
+  const raw = await window.onjeom.openPaths(filePaths);
+  if (!raw) return null;
+  const list = Array.isArray(raw) ? raw : [raw];
+  return mapOpened(list);
 }
 
 async function pickViaInput(multiple: boolean): Promise<PickedFile[] | null> {

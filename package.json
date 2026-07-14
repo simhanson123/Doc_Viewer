@@ -1,6 +1,6 @@
 {
   "name": "onjeom",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Onjeom — multi-format document viewer with freehand annotation (Windows, Linux, Android)",
   "author": "Onjeom Contributors",
   "license": "MIT",
@@ -23,9 +23,10 @@
     "android:run": "npm run android:sync && npx cap run android",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:loaders": "node scripts/test-loaders.mjs",
+    "test:e2e": "playwright test -c playwright.config.mjs",
     "docs:sync": "node scripts/sync-locale-docs.mjs",
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
-    "release:win": "npm run typecheck && npm run test:loaders && npm run electron:build:win && npm run smoke:packaged"
+    "release:win": "npm run typecheck && npm run test:loaders && npm run electron:build:win && npm run smoke:packaged && npm run test:e2e"
   },
   "build": {
     "appId": "app.onjeom.viewer",
@@ -117,6 +118,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
@@ -124,6 +126,7 @@
     "electron": "^34.0.0",
     "electron-builder": "^25.1.8",
     "iconv-lite": "^0.7.3",
+    "playwright": "^1.61.1",
     "typescript": "^5.7.3",
     "vite": "^6.0.7",
     "vite-plugin-electron": "^0.28.8",

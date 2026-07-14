@@ -31,6 +31,9 @@ function onMenu(channel: MenuChannel, cb: () => void): () => void {
 
 const api = {
   openFile: (): Promise<OpenedFile[] | null> => ipcRenderer.invoke('dialog:openFile'),
+  /** Absolute paths — used by Playwright E2E (no file dialog). */
+  openPaths: (filePaths: string[]): Promise<OpenedFile[] | null> =>
+    ipcRenderer.invoke('fs:openPaths', filePaths),
   readFile: (filePath: string): Promise<OpenedFile> =>
     ipcRenderer.invoke('fs:readFile', filePath),
   saveFile: (opts: {
