@@ -23,7 +23,9 @@
     "android:run": "npm run android:sync && npx cap run android",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:loaders": "node scripts/test-loaders.mjs",
-    "docs:sync": "node scripts/sync-locale-docs.mjs"
+    "docs:sync": "node scripts/sync-locale-docs.mjs",
+    "smoke:packaged": "node scripts/smoke-packaged.mjs",
+    "release:win": "npm run typecheck && npm run test:loaders && npm run electron:build:win && npm run smoke:packaged"
   },
   "build": {
     "appId": "app.onjeom.viewer",
