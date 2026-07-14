@@ -1,13 +1,13 @@
 # Onjeom — Deutsch
 
-**v0.4.3** · Multi-format document viewer with freehand annotation.  
+**v0.4.4** · Multi-format document viewer with freehand annotation.  
 **License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
 - [User guide](./USER_GUIDE.md)
 - [Build](./BUILD.md)
 - [All languages](../README.md) · [English (canonical)](../en/README.md)
 
-## Formats & encodings (v0.4.3)
+## Formats & encodings (v0.4.4)
 
 | Format | Extensions | Notes |
 |--------|------------|--------|
@@ -23,7 +23,7 @@ Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual ex
 
 ## Install (Windows)
 
-1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.3+**
+1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.4+**
 2. Installer or portable EXE
 3. **Open** / `Ctrl+O` — PDF, MD, TXT, ASC, DOCX, EPUB, …
 
@@ -42,7 +42,7 @@ npm run electron:build:win
 
 | Format | Notes |
 |--------|--------|
-| PDF | Needs v0.4.3+ (`onjeom://` + pdf.js worker IPC) |
+| PDF | Needs v0.4.4+ (`onjeom://` + pdf.js worker IPC) |
 | TXT / MD / ASC | Multi-encoding auto-detect (ASCII, UTF-8, CP949, Shift_JIS, GBK, …) |
 | DOCX | ZIP/OOXML + mammoth text extract |
 | EPUB | ZIP + chapter extract |

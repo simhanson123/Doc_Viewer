@@ -1,6 +1,6 @@
 # Onjeom — User guide (Nederlands)
 
-**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
+**v0.4.4** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
 ## Open
 
@@ -15,7 +15,7 @@ ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · 
 
 | Issue | Fix |
 |-------|-----|
-| Blank PDF | Use **v0.4.3+** |
+| Blank PDF | Use **v0.4.4+** |
 | Garbled text | Re-save as UTF-8 |
 | Empty library | Normal — open a file |
 

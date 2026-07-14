@@ -60,11 +60,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      buffer: 'buffer/',
     },
   },
+  // Do NOT bundle Node-only packages into the renderer (causes require is not defined).
   optimizeDeps: {
-    include: ['iconv-lite', 'buffer'],
+    exclude: ['iconv-lite', 'encoding'],
   },
   server: {
     port: 5173,

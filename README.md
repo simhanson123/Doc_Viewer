@@ -11,7 +11,9 @@ Read **Markdown, PDF, EPUB, DOCX, and plain text** (ASCII, UTF-8, and many legac
 
 Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-> **Use v0.4.3 or newer.** Older 0.4.0–0.4.1 Windows builds had broken PDF rendering under `file://` + asar.
+> **Use v0.4.4 or newer.**  
+> - 0.4.0–0.4.1: blank PDF (`file://` + asar workers)  
+> - 0.4.3: blank **entire UI** (`iconv-lite` pulled Node `require` into the renderer)
 
 ---
 
@@ -50,7 +52,7 @@ Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md`.
 
 ### Download
 
-[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.3+**
+[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.4+**
 
 ### Build
 

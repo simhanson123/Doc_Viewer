@@ -1,16 +1,26 @@
-import { Buffer } from 'buffer';
-// iconv-lite needs Buffer in the renderer
-(globalThis as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
-
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// Never import iconv-lite / Node Buffer in the renderer —
+// they pull `require()` into the ESM bundle and blank the whole UI.
 
-document.documentElement.style.setProperty('font-family', 'var(--font-ui)');
+const rootEl = document.getElementById('root');
+if (!rootEl) {
+  document.body.innerHTML =
+    '<pre style="padding:24px;font:14px monospace">Onjeom: #root missing</pre>';
+} else {
+  try {
+    createRoot(rootEl).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    document.documentElement.style.setProperty('font-family', 'var(--font-ui)');
+  } catch (err) {
+    const msg = err instanceof Error ? err.stack || err.message : String(err);
+    rootEl.innerHTML = `<pre style="padding:24px;font:13px/1.4 monospace;white-space:pre-wrap;color:#900">Onjeom failed to start:\n\n${msg}</pre>`;
+    console.error('[onjeom] boot failed', err);
+  }
+}

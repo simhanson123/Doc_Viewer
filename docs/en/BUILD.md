@@ -1,6 +1,6 @@
 # Onjeom — Build guide (English)
 
-**v0.4.3** · macOS/iOS packaging is out of scope.
+**v0.4.4** · macOS/iOS packaging is out of scope.
 
 ## Requirements
 
@@ -39,7 +39,7 @@ Load URL (production):  onjeom://app/index.html
 Assets:                 onjeom://app/assets/...
 Protocol:               privileged (fetch + workers + CORS)
 Open file IPC:          always base64(raw bytes)
-Text decode:            renderer encoding detection (iconv-lite)
+Text decode:            renderer TextDecoder (no Node require)
 PDF worker:             fetch → Blob URL, else IPC pdfWorkerBase64 from main
 ```
 
