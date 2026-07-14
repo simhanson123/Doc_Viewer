@@ -1,4 +1,12 @@
-export type DocFormat = 'EPUB' | 'PDF' | 'DOCX' | 'MD' | 'TXT' | 'UNKNOWN';
+export type DocFormat =
+  | 'EPUB'
+  | 'PDF'
+  | 'DOCX'
+  | 'PPTX'
+  | 'MD'
+  | 'TXT'
+  | 'HTML'
+  | 'UNKNOWN';
 
 export type ContentBlock =
   | { k: 'h1'; t: string }
@@ -251,8 +259,10 @@ export const FMT_COLORS: Record<DocFormat, string> = {
   EPUB: '#A65336',
   PDF: '#B0432E',
   DOCX: '#2E5E9E',
+  PPTX: '#C45C26',
   MD: '#3E6B4F',
   TXT: '#8C7F69',
+  HTML: '#5B7C99',
   UNKNOWN: '#8C7F69',
 };
 

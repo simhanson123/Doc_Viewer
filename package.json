@@ -1,6 +1,6 @@
 {
   "name": "onjeom",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Onjeom — multi-format document viewer with freehand annotation (Windows, Linux, Android)",
   "author": "Onjeom Contributors",
   "license": "MIT",
@@ -23,10 +23,12 @@
     "android:run": "npm run android:sync && npx cap run android",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:loaders": "node scripts/test-loaders.mjs",
-    "test:e2e": "playwright test -c playwright.config.mjs",
+    "test:formats": "node scripts/gen-fixtures.mjs && node scripts/experiment-formats.mjs",
+    "gen:fixtures": "node scripts/gen-fixtures.mjs",
+    "test:e2e": "node scripts/gen-fixtures.mjs && playwright test -c playwright.config.mjs",
     "docs:sync": "node scripts/sync-locale-docs.mjs",
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
-    "release:win": "npm run typecheck && npm run test:loaders && npm run electron:build:win && npm run smoke:packaged && npm run test:e2e"
+    "release:win": "npm run typecheck && npm run test:loaders && npm run test:formats && npm run electron:build:win && npm run smoke:packaged && npm run test:e2e"
   },
   "build": {
     "appId": "app.onjeom.viewer",

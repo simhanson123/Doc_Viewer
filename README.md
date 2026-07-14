@@ -5,17 +5,16 @@
 [![Release](https://img.shields.io/github/v/release/simhanson123/Doc_Viewer)](https://github.com/simhanson123/Doc_Viewer/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-Read **Markdown, PDF, EPUB, DOCX, and plain text** (ASCII, UTF-8, and many legacy encodings), then annotate with pen, stylus pressure, highlighter, shapes, and sticky notes.
+Read **Markdown, HTML, PDF, EPUB, DOCX, PPTX, and plain text** (ASCII, UTF-8, and many legacy encodings), then annotate with pen, stylus pressure, highlighter, shapes, and sticky notes.
 
 **Primary target:** Windows · also Linux & Android (in progress).
 
 Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-> **Use v0.4.6 or newer.**  
-> - 0.4.0–0.4.1: blank PDF (`file://` + asar workers)  
-> - 0.4.3: blank **entire UI** (`iconv-lite` → Node `require` in renderer)  
-> - 0.4.6: open encrypted PDFs + export PDF with password  
-> - Release gate: `npm run release:win` = typecheck + loaders + build + smoke + **Playwright E2E**
+> **Use v0.4.7 or newer.**  
+> - Formats: MD · TXT · HTML · PDF · DOCX · PPTX · EPUB  
+> - Encrypted PDF open + password export  
+> - Release gate: typecheck + loaders + **format experiments** + build + smoke + Playwright E2E
 
 ---
 
@@ -54,18 +53,18 @@ Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md`.
 
 ### Download
 
-[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.6+**
+[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.7+**
 
 ### Build
 
 ```bash
 npm install
-npm run test:loaders          # encoding / PDF / DOCX offline
+npm run test:loaders          # encoding / PDF header offline
+npm run test:formats          # generate + experiment PDF/EPUB/DOCX/PPTX/HTML fixtures
 npm run electron:build:win
-npm run smoke:packaged        # EXE boot (no require crash)
-npm run test:e2e              # Playwright → real Electron: MD/TXT/ASC/DOCX/PDF
-# or all gates:
-npm run release:win
+npm run smoke:packaged        # EXE boot
+npm run test:e2e              # Playwright Electron: all major formats + password PDF
+npm run release:win           # full release gate
 ```
 
 | Output | Description |

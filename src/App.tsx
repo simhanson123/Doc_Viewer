@@ -757,7 +757,7 @@ function AppShell({
             {t('emptyDoc')}
           </div>
           <div style={{ fontSize: 13, color: theme.muted, textAlign: 'center', maxWidth: 360 }}>
-            PDF · MD · EPUB · DOCX · TXT
+            PDF · MD · EPUB · DOCX · PPTX · HTML · TXT
           </div>
           <button
             type="button"
@@ -993,7 +993,7 @@ function AppShell({
                   }
                 >
                   <option value="all">{t('allFormats')}</option>
-                  {(['MD', 'PDF', 'EPUB', 'DOCX', 'TXT'] as DocFormat[]).map((f) => (
+                  {(['MD', 'PDF', 'EPUB', 'DOCX', 'PPTX', 'HTML', 'TXT'] as DocFormat[]).map((f) => (
                     <option key={f} value={f}>
                       {f}
                     </option>

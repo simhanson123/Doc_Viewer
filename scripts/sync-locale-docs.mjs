@@ -6,7 +6,7 @@
 import { writeFileSync, readdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const VERSION = '0.4.6';
+const VERSION = '0.4.7';
 const DOCS = join(process.cwd(), 'docs');
 
 const locales = readdirSync(DOCS, { withFileTypes: true })
@@ -40,8 +40,10 @@ const FORMATS_TABLE_EN = `| Format | Extensions | Notes |
 |--------|------------|--------|
 | Markdown | \`.md\` \`.markdown\` | Headings, lists, code |
 | Plain text | \`.txt\` \`.text\` \`.asc\` \`.ascii\` \`.log\` \`.csv\` … | Encoding auto-detect |
-| PDF | \`.pdf\` | pdf.js canvas pages |
+| HTML | \`.html\` \`.htm\` | Structured reading (not raw tags) |
+| PDF | \`.pdf\` | pdf.js canvas; encrypted OK with password |
 | Word | \`.docx\` | OOXML via mammoth |
+| PowerPoint | \`.pptx\` | One slide ≈ one page |
 | EPUB | \`.epub\` | Chapters paginated |
 
 **Text encodings:** ASCII · UTF-8 (±BOM) · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · Windows-1251/1256 · …

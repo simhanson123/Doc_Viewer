@@ -409,6 +409,7 @@ const TEXT_EXTS = new Set([
   'tsv',
   'json',
   'xml',
+  // html/htm: still base64 bytes (encoding detect) but renderer uses HTML loader
   'html',
   'htm',
   'css',
@@ -461,6 +462,7 @@ const OPEN_FILTERS: Electron.FileFilter[] = [
       'pdf',
       'epub',
       'docx',
+      'pptx',
       'json',
       'xml',
       'html',
@@ -471,6 +473,8 @@ const OPEN_FILTERS: Electron.FileFilter[] = [
   { name: 'Markdown', extensions: ['md', 'markdown'] },
   { name: 'EPUB', extensions: ['epub'] },
   { name: 'Word', extensions: ['docx'] },
+  { name: 'PowerPoint', extensions: ['pptx'] },
+  { name: 'HTML', extensions: ['html', 'htm'] },
   {
     name: 'Text / code',
     extensions: [
@@ -483,8 +487,6 @@ const OPEN_FILTERS: Electron.FileFilter[] = [
       'tsv',
       'json',
       'xml',
-      'html',
-      'htm',
       'ini',
       'cfg',
       'conf',

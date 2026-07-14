@@ -6,6 +6,8 @@ import { loadMarkdown, loadText } from './markdown';
 import { loadPdf, isPdfPasswordError } from './pdf';
 import { loadEpub } from './epub';
 import { loadDocx } from './docx';
+import { loadHtml } from './html';
+import { loadPptx } from './pptx';
 
 export { isPdfPasswordError, PdfPasswordError } from './pdf';
 
@@ -77,6 +79,13 @@ export async function loadDocument(file: RawFile): Promise<DocumentModel> {
       return doc;
     }
 
+    if (ext === 'html' || ext === 'htm') {
+      const { text, encoding } = resolveText(file);
+      const doc = loadHtml(text || '', base);
+      doc.sub = `${doc.pages.length} pages · HTML · ${encoding}`;
+      return doc;
+    }
+
     if (isTextExt(ext) || file.isText) {
       const { text, encoding } = resolveText(file);
       const doc = loadText(text || '(empty file)', base);
@@ -130,6 +139,16 @@ export async function loadDocument(file: RawFile): Promise<DocumentModel> {
         throw new Error('Not a valid DOCX (missing ZIP/OOXML header)');
       }
       return loadDocx(buf, base);
+    }
+
+    if (ext === 'pptx') {
+      const buf = toArrayBuffer(file.data, file.encoding || 'base64');
+      if (buf.byteLength < 30) throw new Error('PPTX too small');
+      const z = new Uint8Array(buf, 0, 2);
+      if (z[0] !== 0x50 || z[1] !== 0x4b) {
+        throw new Error('Not a valid PPTX (missing ZIP/OOXML header)');
+      }
+      return loadPptx(buf, base);
     }
 
     // Fallback: try as text with encoding detection

@@ -14,8 +14,7 @@ export const TEXT_EXTS = new Set([
   'tsv',
   'json',
   'xml',
-  'html',
-  'htm',
+  // html/htm handled by dedicated HTML loader (not plain text)
   'css',
   'js',
   'ts',
@@ -90,4 +89,7 @@ export const OPEN_ALL_DOCUMENT_EXTENSIONS = [
   'pdf',
   'epub',
   'docx',
+  'pptx',
+  'html',
+  'htm',
 ];
