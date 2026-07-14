@@ -35,7 +35,9 @@ export function PageBody({
       buf = copy.buffer;
     }
     if (buf && buf.byteLength > 0) {
-      return <PdfPage data={buf} pageIndex={page.pageIndex} />;
+      return (
+        <PdfPage data={buf} pageIndex={page.pageIndex} password={doc.pdfPassword} />
+      );
     }
     return (
       <div className="page-content pdf-content" style={{ color: theme.muted, padding: 24 }}>
@@ -89,7 +91,15 @@ export function PageBody({
   );
 }
 
-function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) {
+function PdfPage({
+  data,
+  pageIndex,
+  password,
+}: {
+  data: ArrayBuffer;
+  pageIndex: number;
+  password?: string;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
@@ -102,7 +112,7 @@ function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) 
     setErr(null);
     (async () => {
       try {
-        await renderPdfPage(data, pageIndex, canvas);
+        await renderPdfPage(data, pageIndex, canvas, password);
         if (!cancelled) setBusy(false);
       } catch (e) {
         console.error('[onjeom] PDF render failed', e);
@@ -115,7 +125,7 @@ function PdfPage({ data, pageIndex }: { data: ArrayBuffer; pageIndex: number }) 
     return () => {
       cancelled = true;
     };
-  }, [data, pageIndex]);
+  }, [data, pageIndex, password]);
 
   return (
     <div

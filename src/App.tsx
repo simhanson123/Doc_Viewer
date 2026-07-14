@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DocAnn, DocFormat, DocumentModel, ShapeKind, Tool, ViewMode } from '@/types';
 import { FMT_COLORS, NOTE_COLORS, PAGE_W, THEMES } from '@/types';
-import { loadDocument } from '@/lib/loaders';
+import { loadDocument, isPdfPasswordError } from '@/lib/loaders';
 import { useAnnotations } from '@/hooks/useAnnotations';
 import { useSettings } from '@/hooks/useSettings';
 import {
@@ -25,12 +25,35 @@ import { DocumentPage } from '@/components/DocumentPage';
 import { Toolbar } from '@/components/Toolbar';
 import { SettingsModal } from '@/components/SettingsModal';
 import { ShortcutsModal } from '@/components/ShortcutsModal';
+import { PasswordModal } from '@/components/PasswordModal';
 import { RightPanel } from '@/components/RightPanel';
 import { ThumbStrip } from '@/components/ThumbStrip';
 import { ReflowView } from '@/components/ReflowView';
 import { IconBookmark, IconMenu } from '@/components/Icons';
 import { I18nProvider, useI18n } from '@/i18n/I18nContext';
 import type { LocaleCode } from '@/i18n';
+
+type PendingOpen = {
+  path?: string;
+  name: string;
+  ext: string;
+  data: string | ArrayBuffer;
+  isText: boolean;
+  encoding?: 'utf8' | 'base64';
+  password?: string;
+};
+
+type PwdPrompt =
+  | {
+      kind: 'unlock';
+      file: PendingOpen;
+      hint: 'need' | 'incorrect' | null;
+      /** remaining queue after this file */
+      rest: PendingOpen[];
+      done: DocumentModel[];
+    }
+  | { kind: 'export' }
+  | null;
 
 const LIB_META_KEY = 'onjeom-lib-meta-v1';
 
@@ -97,6 +120,7 @@ function AppShell({
   const [gotoVal, setGotoVal] = useState('');
   const [exporting, setExporting] = useState(false);
   const [libQuery, setLibQuery] = useState('');
+  const [pwdPrompt, setPwdPrompt] = useState<PwdPrompt>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const accent = settings.accentColor;
@@ -172,56 +196,172 @@ function AppShell({
     [annApi, persistMeta],
   );
 
+  const commitModels = useCallback(
+    (models: DocumentModel[]) => {
+      if (!models.length) return;
+      setLibrary((lib) => {
+        let next = lib.slice();
+        for (const model of models) {
+          const exists = next.findIndex((d) => d.path && d.path === model.path);
+          if (exists >= 0) next[exists] = { ...next[exists], ...model };
+          else next = [model, ...next];
+        }
+        persistMeta(next);
+        return next;
+      });
+      selectDoc(models[0].id);
+      showToast(t('toastOpened', { n: models.length }));
+    },
+    [persistMeta, selectDoc, showToast, t],
+  );
+
+  const loadOne = useCallback(async (raw: PendingOpen): Promise<DocumentModel> => {
+    const model = await loadDocument({
+      path: raw.path,
+      name: raw.name,
+      ext: raw.ext,
+      data: raw.data,
+      isText: raw.isText,
+      encoding: raw.encoding,
+      password: raw.password,
+    });
+    model.folder = model.folder || '미분류';
+    model.addedAt = Date.now();
+    model.lastOpened = Date.now();
+    return model;
+  }, []);
+
   const ingestFiles = useCallback(
-    async (
-      files: {
-        path?: string;
-        name: string;
-        ext: string;
-        data: string | ArrayBuffer;
-        isText: boolean;
-        encoding?: 'utf8' | 'base64';
-      }[],
-    ) => {
+    async (files: PendingOpen[]) => {
       setLoading(true);
       setError(null);
+      setPwdPrompt(null);
       try {
         const models: DocumentModel[] = [];
-        for (const raw of files) {
-          const model = await loadDocument({
-            path: raw.path,
-            name: raw.name,
-            ext: raw.ext,
-            data: raw.data,
-            isText: raw.isText,
-            encoding: raw.encoding,
-          });
-          model.folder = model.folder || '미분류';
-          model.addedAt = Date.now();
-          model.lastOpened = Date.now();
-          models.push(model);
-        }
-        if (!models.length) return;
-        setLibrary((lib) => {
-          let next = lib.slice();
-          for (const model of models) {
-            const exists = next.findIndex((d) => d.path && d.path === model.path);
-            if (exists >= 0) next[exists] = { ...next[exists], ...model };
-            else next = [model, ...next];
+        const queue = files.slice();
+        while (queue.length) {
+          const raw = queue.shift()!;
+          try {
+            models.push(await loadOne(raw));
+          } catch (e) {
+            if (isPdfPasswordError(e)) {
+              // Pause queue — resume after password dialog
+              setPwdPrompt({
+                kind: 'unlock',
+                file: raw,
+                hint: e.kind,
+                rest: queue,
+                done: models,
+              });
+              setLoading(false);
+              return;
+            }
+            throw e;
           }
-          persistMeta(next);
-          return next;
-        });
-        selectDoc(models[0].id);
-        showToast(t('toastOpened', { n: models.length }));
+        }
+        commitModels(models);
       } catch (e) {
         console.error(e);
-        setError(e instanceof Error ? e.message : '파일을 열 수 없습니다.');
+        setError(e instanceof Error ? e.message : t('errOpen'));
       } finally {
         setLoading(false);
       }
     },
-    [persistMeta, selectDoc, showToast, t],
+    [commitModels, loadOne, t],
+  );
+
+  const onPasswordSubmit = useCallback(
+    async (password: string) => {
+      if (!pwdPrompt) return;
+
+      if (pwdPrompt.kind === 'export') {
+        if (!doc) return;
+        setPwdPrompt(null);
+        setExporting(true);
+        try {
+          const blob = await exportAnnotatedPdf(doc, annApi.ann, theme, {
+            vector: settings.vectorPdfExport,
+            pressureCurve: settings.pressureCurve,
+            userPassword: password,
+          });
+          const name = `${doc.title.replace(/[\\/:*?"<>|]/g, '_')}-protected.pdf`;
+          const buf = await blob.arrayBuffer();
+          const result = await platformSaveBinary(buf, name, 'application/pdf', [
+            { name: 'PDF', extensions: ['pdf'] },
+          ]);
+          if (result !== 'cancelled') {
+            showToast(
+              result === 'shared' ? t('toastShared') : t('toastPdfProtected'),
+            );
+          }
+        } catch (e) {
+          console.error(e);
+          setError(e instanceof Error ? e.message : t('errPdf'));
+        } finally {
+          setExporting(false);
+        }
+        return;
+      }
+
+      // unlock encrypted PDF
+      const { file, rest, done } = pwdPrompt;
+      setLoading(true);
+      try {
+        const model = await loadOne({ ...file, password });
+        const models = [...done, model];
+        // Continue remaining queue
+        const queue = rest.slice();
+        while (queue.length) {
+          const raw = queue.shift()!;
+          try {
+            models.push(await loadOne(raw));
+          } catch (e) {
+            if (isPdfPasswordError(e)) {
+              setPwdPrompt({
+                kind: 'unlock',
+                file: raw,
+                hint: e.kind,
+                rest: queue,
+                done: models,
+              });
+              setLoading(false);
+              return;
+            }
+            throw e;
+          }
+        }
+        setPwdPrompt(null);
+        commitModels(models);
+      } catch (e) {
+        if (isPdfPasswordError(e)) {
+          setPwdPrompt({
+            kind: 'unlock',
+            file,
+            hint: e.kind,
+            rest,
+            done,
+          });
+          return;
+        }
+        console.error(e);
+        setPwdPrompt(null);
+        setError(e instanceof Error ? e.message : t('errOpen'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      pwdPrompt,
+      doc,
+      annApi.ann,
+      theme,
+      settings.vectorPdfExport,
+      settings.pressureCurve,
+      loadOne,
+      commitModels,
+      showToast,
+      t,
+    ],
   );
 
   const openFile = useCallback(async () => {
@@ -262,11 +402,17 @@ function AppShell({
       if (result !== 'cancelled') showToast(result === 'shared' ? t('toastShared') : t('toastPdfSaved'));
     } catch (e) {
       console.error(e);
-      setError(e instanceof Error ? e.message : 'PDF 내보내기 실패');
+      setError(e instanceof Error ? e.message : t('errPdf'));
     } finally {
       setExporting(false);
     }
-  }, [doc, annApi.ann, theme, settings.vectorPdfExport, settings.pressureCurve, showToast]);
+  }, [doc, annApi.ann, theme, settings.vectorPdfExport, settings.pressureCurve, showToast, t]);
+
+  /** Export annotated PDF with a user-set open password. */
+  const exportPdfProtected = useCallback(() => {
+    if (!doc) return;
+    setPwdPrompt({ kind: 'export' });
+  }, [doc]);
 
   const exportJson = useCallback(async () => {
     if (!doc) return;
@@ -628,6 +774,20 @@ function AppShell({
             </div>
           )}
         </main>
+        <PasswordModal
+          open={!!pwdPrompt && pwdPrompt.kind === 'unlock'}
+          mode="unlock"
+          theme={theme}
+          fileName={pwdPrompt?.kind === 'unlock' ? pwdPrompt.file.name : undefined}
+          errorHint={pwdPrompt?.kind === 'unlock' ? pwdPrompt.hint : null}
+          onSubmit={(p) => void onPasswordSubmit(p)}
+          onCancel={() => {
+            if (pwdPrompt?.kind === 'unlock' && pwdPrompt.done.length) {
+              commitModels(pwdPrompt.done);
+            }
+            setPwdPrompt(null);
+          }}
+        />
         <SettingsModal
           open={settingsOpen}
           settings={settings}
@@ -636,6 +796,9 @@ function AppShell({
           onPickAnnFolder={() => void pickAnnFolder()}
           onReset={reset}
         />
+        {(loading || exporting) && (
+          <div className="loading-overlay">{exporting ? t('exporting') : t('loading')}</div>
+        )}
         {toast && <div className="toast">{toast}</div>}
       </div>
     );
@@ -723,6 +886,16 @@ function AppShell({
         </button>
         <button type="button" className="open-btn" onClick={() => void exportPdf()} disabled={exporting}>
           {t('exportPdf')}
+        </button>
+        <button
+          type="button"
+          className="open-btn"
+          data-testid="export-pdf-password-top"
+          onClick={() => exportPdfProtected()}
+          disabled={exporting}
+          title={t('exportPdfPassword')}
+        >
+          {t('exportPdfPasswordShort')}
         </button>
         <button type="button" className="open-btn" onClick={() => setSettingsOpen(true)}>
           {t('settings')}
@@ -935,6 +1108,14 @@ function AppShell({
                 <button type="button" className="open-btn block" onClick={() => void exportPdf()}>
                   {t('exportPdfAnn')}
                 </button>
+                <button
+                  type="button"
+                  className="open-btn block"
+                  data-testid="export-pdf-password"
+                  onClick={() => exportPdfProtected()}
+                >
+                  {t('exportPdfPassword')}
+                </button>
                 <button type="button" className="open-btn block" onClick={() => void exportPng()}>
                   {t('exportPng')}
                 </button>
@@ -1138,6 +1319,26 @@ function AppShell({
         )}
       </div>
 
+      <PasswordModal
+        open={!!pwdPrompt}
+        mode={pwdPrompt?.kind === 'export' ? 'export' : 'unlock'}
+        theme={theme}
+        fileName={
+          pwdPrompt?.kind === 'unlock'
+            ? pwdPrompt.file.name
+            : doc
+              ? `${doc.title}.pdf`
+              : undefined
+        }
+        errorHint={pwdPrompt?.kind === 'unlock' ? pwdPrompt.hint : null}
+        onSubmit={(p) => void onPasswordSubmit(p)}
+        onCancel={() => {
+          if (pwdPrompt?.kind === 'unlock' && pwdPrompt.done.length) {
+            commitModels(pwdPrompt.done);
+          }
+          setPwdPrompt(null);
+        }}
+      />
       <SettingsModal
         open={settingsOpen}
         settings={settings}

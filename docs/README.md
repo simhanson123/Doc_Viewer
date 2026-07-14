@@ -1,6 +1,6 @@
 # Onjeom documentation
 
-**App version: v0.4.5**
+**App version: v0.4.6**
 
 Choose your language. Each folder has an overview, user guide, and build notes.
 

@@ -31,6 +31,11 @@ export type DocumentModel = {
   pages: PageContent[];
   /** Raw payload for format-specific renderers (PDF bytes, etc.) */
   raw?: ArrayBuffer | Uint8Array | string;
+  /**
+   * In-memory only: password used to unlock an encrypted PDF.
+   * Never persisted to localStorage / disk meta.
+   */
+  pdfPassword?: string;
   toc?: TocItem[];
   tags?: string[];
   folder?: string;

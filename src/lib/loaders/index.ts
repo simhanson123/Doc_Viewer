@@ -3,9 +3,11 @@ import { toArrayBuffer, base64ToUint8Array } from '@/lib/binary';
 import { decodeTextBytes, decodeTextFromBase64 } from '@/lib/encoding';
 import { isTextExt } from '@/lib/textExts';
 import { loadMarkdown, loadText } from './markdown';
-import { loadPdf } from './pdf';
+import { loadPdf, isPdfPasswordError } from './pdf';
 import { loadEpub } from './epub';
 import { loadDocx } from './docx';
+
+export { isPdfPasswordError, PdfPasswordError } from './pdf';
 
 export type RawFile = {
   path?: string;
@@ -16,6 +18,8 @@ export type RawFile = {
   isText: boolean;
   encoding?: 'utf8' | 'base64';
   byteLength?: number;
+  /** Password for encrypted PDFs */
+  password?: string;
 };
 
 function uid(prefix: string) {
@@ -104,7 +108,7 @@ export async function loadDocument(file: RawFile): Promise<DocumentModel> {
           `Not a valid PDF (header="${magic.replace(/[^\x20-\x7e]/g, '?')}"). bytes=${buf.byteLength}`,
         );
       }
-      return loadPdf(buf, base);
+      return loadPdf(buf, { ...base, password: file.password });
     }
 
     if (ext === 'epub') {
@@ -137,6 +141,8 @@ export async function loadDocument(file: RawFile): Promise<DocumentModel> {
     }
     return loadText(String(file.data), { ...base, title: file.name });
   } catch (e) {
+    // Preserve password errors so the UI can prompt (do not wrap)
+    if (isPdfPasswordError(e)) throw e;
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[onjeom load] failed', file.name, e);
     throw new Error(`${file.name}: ${msg}`);

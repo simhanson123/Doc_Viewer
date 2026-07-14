@@ -6,7 +6,7 @@
 import { writeFileSync, readdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const VERSION = '0.4.5';
+const VERSION = '0.4.6';
 const DOCS = join(process.cwd(), 'docs');
 
 const locales = readdirSync(DOCS, { withFileTypes: true })

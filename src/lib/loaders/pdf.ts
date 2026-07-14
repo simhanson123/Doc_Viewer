@@ -9,22 +9,43 @@ import pdfWorkerAsset from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 const docCache = new Map<string, Promise<PDFDocumentProxy>>();
 let workerInit: Promise<string> | null = null;
 
-function bufferFingerprint(data: ArrayBuffer | Uint8Array): string {
+/** Thrown when PDF needs a password or the password is wrong. */
+export class PdfPasswordError extends Error {
+  readonly kind: 'need' | 'incorrect';
+
+  constructor(kind: 'need' | 'incorrect', message?: string) {
+    super(
+      message ||
+        (kind === 'incorrect' ? 'Incorrect PDF password' : 'Password required for this PDF'),
+    );
+    this.name = 'PdfPasswordError';
+    this.kind = kind;
+  }
+}
+
+export function isPdfPasswordError(e: unknown): e is PdfPasswordError {
+  return e instanceof PdfPasswordError || (e as { name?: string })?.name === 'PdfPasswordError';
+}
+
+function bufferFingerprint(data: ArrayBuffer | Uint8Array, password?: string): string {
   const u8 = data instanceof Uint8Array ? data : new Uint8Array(data);
-  // length + first/last bytes — enough for cache key of opened files
   const n = u8.byteLength;
   const a = u8[0] ?? 0;
   const b = u8[Math.min(100, n - 1)] ?? 0;
   const c = u8[Math.min(1000, n - 1)] ?? 0;
-  return `${n}:${a}:${b}:${c}`;
+  // Include password in cache key so wrong/right passwords don't collide
+  const p = password ? `:p${password.length}:${simpleHash(password)}` : '';
+  return `${n}:${a}:${b}:${c}${p}`;
+}
+
+function simpleHash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h >>> 0;
 }
 
 /**
  * Resolve worker script into a Blob URL.
- * Order:
- *  1) fetch from same origin (onjeom://app/assets/... in production)
- *  2) fetch relative asset URL
- *  3) IPC: main process reads worker file from disk/asar and returns base64
  */
 async function ensurePdfWorker(): Promise<string> {
   if (workerInit) return workerInit;
@@ -32,7 +53,6 @@ async function ensurePdfWorker(): Promise<string> {
     const asset = String(pdfWorkerAsset);
     const candidates: string[] = [];
 
-    // Production custom protocol + relative base
     try {
       candidates.push(new URL(asset, window.location.href).href);
     } catch {
@@ -66,7 +86,6 @@ async function ensurePdfWorker(): Promise<string> {
       }
     }
 
-    // Main-process fallback (always works if packaging is correct)
     if (window.onjeom?.pdfWorkerBase64) {
       const packed = await window.onjeom.pdfWorkerBase64();
       if (packed?.base64) {
@@ -94,25 +113,50 @@ async function ensurePdfWorker(): Promise<string> {
   return workerInit;
 }
 
-async function getPdf(data: ArrayBuffer | Uint8Array): Promise<PDFDocumentProxy> {
+function asPasswordError(err: unknown): PdfPasswordError | null {
+  if (!err || typeof err !== 'object') return null;
+  const e = err as { name?: string; code?: number; message?: string };
+  // pdf.js PasswordException: name PasswordException, code NEED_PASSWORD=1 / INCORRECT=2
+  const isPwd =
+    e.name === 'PasswordException' ||
+    e.name === 'PdfPasswordError' ||
+    /password/i.test(e.message || '');
+  if (!isPwd && e.code !== 1 && e.code !== 2) return null;
+  // PasswordResponses.INCORRECT_PASSWORD === 2
+  if (e.code === 2 || /incorrect/i.test(e.message || '')) {
+    return new PdfPasswordError('incorrect', e.message);
+  }
+  return new PdfPasswordError('need', e.message);
+}
+
+export async function getPdf(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<PDFDocumentProxy> {
   await ensurePdfWorker();
-  const key = bufferFingerprint(data);
+  const key = bufferFingerprint(data, password);
   let task = docCache.get(key);
   if (!task) {
     const u8 = data instanceof Uint8Array ? data : new Uint8Array(data);
-    // Own a copy — pdf.js may transfer/detach the buffer
     const owned = u8.slice();
-    // Verify PDF header
     const head = String.fromCharCode(owned[0], owned[1], owned[2], owned[3], owned[4]);
     if (!head.startsWith('%PDF')) {
       console.warn('[onjeom pdf] missing %PDF header, got:', head, 'bytes=', owned.byteLength);
     } else {
-      console.info('[onjeom pdf] getDocument bytes=', owned.byteLength, 'header=', head);
+      console.info(
+        '[onjeom pdf] getDocument bytes=',
+        owned.byteLength,
+        'header=',
+        head,
+        'password=',
+        password ? '(set)' : '(none)',
+      );
     }
 
     task = pdfjs
       .getDocument({
         data: owned,
+        password: password || undefined,
         useSystemFonts: true,
         isEvalSupported: false,
         disableAutoFetch: true,
@@ -125,6 +169,11 @@ async function getPdf(data: ArrayBuffer | Uint8Array): Promise<PDFDocumentProxy>
       })
       .catch((err) => {
         docCache.delete(key);
+        const pwdErr = asPasswordError(err);
+        if (pwdErr) {
+          console.warn('[onjeom pdf] password required/incorrect', pwdErr.kind);
+          throw pwdErr;
+        }
         console.error('[onjeom pdf] getDocument failed', err);
         throw err;
       });
@@ -135,14 +184,14 @@ async function getPdf(data: ArrayBuffer | Uint8Array): Promise<PDFDocumentProxy>
 
 export async function loadPdf(
   data: ArrayBuffer,
-  opts: { id: string; title: string; path?: string },
+  opts: { id: string; title: string; path?: string; password?: string },
 ): Promise<DocumentModel> {
   if (!data || data.byteLength === 0) {
     throw new Error('PDF data is empty');
   }
 
   const owned = data.slice(0);
-  const pdf = await getPdf(owned);
+  const pdf = await getPdf(owned, opts.password);
   const pages: PageContent[] = [];
   for (let i = 0; i < pdf.numPages; i++) {
     pages.push({ kind: 'pdf', pageIndex: i });
@@ -161,11 +210,13 @@ export async function loadPdf(
     id: opts.id,
     fmt: 'PDF',
     title,
-    sub: `${pdf.numPages} pages · PDF`,
+    sub: `${pdf.numPages} pages · PDF${opts.password ? ' · 🔒' : ''}`,
     face: 'serif',
     path: opts.path,
     pages,
     raw: owned,
+    // Keep password only in memory for subsequent page renders
+    pdfPassword: opts.password,
   };
 }
 
@@ -173,8 +224,9 @@ export async function renderPdfPage(
   data: ArrayBuffer | Uint8Array,
   pageIndex: number,
   canvas: HTMLCanvasElement,
+  password?: string,
 ): Promise<void> {
-  const pdf = await getPdf(data);
+  const pdf = await getPdf(data, password);
   const page = await pdf.getPage(pageIndex + 1);
   const unscaled = page.getViewport({ scale: 1 });
   const scale = Math.min(PAGE_W / unscaled.width, PAGE_H / unscaled.height) * 2;

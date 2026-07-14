@@ -339,6 +339,10 @@ async function renderPageCanvas(
 export type ExportOptions = {
   vector?: boolean;
   pressureCurve?: PressureCurve;
+  /** User password — encrypts the exported PDF (open requires this password). */
+  userPassword?: string;
+  /** Owner password for permissions; defaults to userPassword when omitted. */
+  ownerPassword?: string;
 };
 
 export async function exportAnnotatedPdf(
@@ -349,10 +353,19 @@ export async function exportAnnotatedPdf(
 ): Promise<Blob> {
   const vector = opts.vector !== false && doc.fmt !== 'PDF';
   const curve = opts.pressureCurve || 'ink';
+  const encryption =
+    opts.userPassword && opts.userPassword.length > 0
+      ? {
+          userPassword: opts.userPassword,
+          ownerPassword: opts.ownerPassword || opts.userPassword,
+          userPermissions: ['print', 'copy'] as ('print' | 'copy')[],
+        }
+      : undefined;
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'pt',
     format: [PAGE_W, PAGE_H],
+    encryption,
   });
 
   for (let i = 0; i < doc.pages.length; i++) {

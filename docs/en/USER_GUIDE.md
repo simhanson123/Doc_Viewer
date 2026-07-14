@@ -1,6 +1,6 @@
 # Onjeom — User guide (English)
 
-**v0.4.5**
+**v0.4.6**
 
 ## Open a document
 
@@ -59,7 +59,7 @@ Select · text highlight · highlighter · pen (stylus pressure) · line · eras
 
 | Symptom | What to try |
 |---------|-------------|
-| PDF blank | Use **v0.4.5+**. View → Developer tools → look for `[onjeom pdf]`. Help → Path diagnostics. |
+| PDF blank | Use **v0.4.6+**. View → Developer tools → look for `[onjeom pdf]`. Help → Path diagnostics. |
 | Garbled Korean/Japanese/Chinese text | Encoding is auto-detected; try re-saving as UTF-8. |
 | File won’t open | Check extension; use All files filter. Error toast shows details. |
 | Empty library | Normal — open a file with **Open**. |

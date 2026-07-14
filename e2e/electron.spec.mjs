@@ -196,3 +196,68 @@ test('opens PDF and renders canvas (not blank forever)', async () => {
   expect(box.width).toBeGreaterThan(50);
   expect(box.height).toBeGreaterThan(50);
 });
+
+test('encrypted PDF prompts for password and unlocks', async () => {
+  // Generate protected fixture with jsPDF if missing
+  const protectedPath = join(fixtures, 'protected.pdf');
+  if (!existsSync(protectedPath)) {
+    const { jsPDF } = await import('jspdf');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: [300, 144],
+      encryption: {
+        userPassword: 'secret123',
+        ownerPassword: 'secret123',
+        userPermissions: ['print', 'copy'],
+      },
+    });
+    pdf.setFontSize(18);
+    pdf.text('Protected Hello Onjeom', 30, 80);
+    writeFileSync(protectedPath, Buffer.from(pdf.output('arraybuffer')));
+  }
+
+  // Open without password → modal
+  await page.evaluate(async (p) => {
+    if (!window.__onjeomE2EOpen) throw new Error('__onjeomE2EOpen missing');
+    await window.__onjeomE2EOpen([p]);
+  }, protectedPath);
+
+  const modal = page.locator('[data-testid="password-modal"]');
+  await expect(modal).toBeVisible({ timeout: 20000 });
+  await page.locator('[data-testid="password-input"]').fill('wrong');
+  await page.locator('[data-testid="password-submit"]').click();
+  // Wrong password keeps modal open (or re-shows with error)
+  await expect(modal).toBeVisible({ timeout: 10000 });
+
+  await page.locator('[data-testid="password-input"]').fill('secret123');
+  await page.locator('[data-testid="password-submit"]').click();
+  await expect(page.locator('[data-testid="app-shell"]')).toBeVisible({ timeout: 30000 });
+  await expect(page.locator('[data-testid="fmt-chip"]')).toHaveText('PDF');
+  const pdfPage = page.locator('[data-testid="page-content"][data-page-kind="pdf"]');
+  await expect(pdfPage).toBeVisible({ timeout: 30000 });
+  await expect
+    .poll(async () => pdfPage.getAttribute('data-pdf-busy'), { timeout: 30000 })
+    .toBe('0');
+});
+
+test('export with password UI opens set-password dialog', async () => {
+  // Ensure a doc is open
+  await openFixture('sample.md');
+  await expect(page.locator('[data-testid="app-shell"]')).toBeVisible();
+  const btn = page.locator('[data-testid="export-pdf-password"]');
+  // Sidebar export may need library open — use top bar if present
+  if (await btn.count()) {
+    await btn.click();
+  } else {
+    await page.locator('[data-testid="export-pdf-password-top"]').click();
+  }
+  await expect(page.locator('[data-testid="password-modal"]')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('[data-testid="password-confirm"]')).toBeVisible();
+  await page.locator('[data-testid="password-input"]').fill('export-pass');
+  await page.locator('[data-testid="password-confirm"]').fill('export-pass');
+  // Cancel rather than saving (avoids native save dialog in CI)
+  // Scope to modal — toolbar has "Undo" whose Korean label also contains 취소
+  await page.locator('[data-testid="password-modal"] .open-btn').filter({ hasText: /cancel|취소|キャンセル|取消/i }).first().click();
+  await expect(page.locator('[data-testid="password-modal"]')).toBeHidden({ timeout: 10000 });
+});

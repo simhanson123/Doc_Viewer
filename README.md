@@ -11,10 +11,11 @@ Read **Markdown, PDF, EPUB, DOCX, and plain text** (ASCII, UTF-8, and many legac
 
 Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-> **Use v0.4.5 or newer.**  
+> **Use v0.4.6 or newer.**  
 > - 0.4.0–0.4.1: blank PDF (`file://` + asar workers)  
 > - 0.4.3: blank **entire UI** (`iconv-lite` → Node `require` in renderer)  
-> - Release gate: `npm run release:win` = typecheck + loaders + build + packaged smoke + **Playwright Electron E2E**
+> - 0.4.6: open encrypted PDFs + export PDF with password  
+> - Release gate: `npm run release:win` = typecheck + loaders + build + smoke + **Playwright E2E**
 
 ---
 
@@ -53,7 +54,7 @@ Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md`.
 
 ### Download
 
-[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.5+**
+[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.6+**
 
 ### Build
 
@@ -99,7 +100,8 @@ See [docs/en/BUILD.md](./docs/en/BUILD.md).
 - Reading: single · spread · scroll · reflow  
 - Themes: cream · white · dark · sepia · night  
 - Annotation + undo/redo + local auto-save  
-- Export: annotated PDF · PNG · JSON  
+- Export: annotated PDF · **password-protected PDF** · PNG · JSON  
+- **Open encrypted PDFs** (password dialog)  
 - **20 UI languages** (Settings → Language)  
 - World-script reading fonts  
 - **No sample documents** — empty library until you open a file  

@@ -1,6 +1,6 @@
 # Onjeom — Build guide (English)
 
-**v0.4.5** · macOS/iOS packaging is out of scope.
+**v0.4.6** · macOS/iOS packaging is out of scope.
 
 ## Requirements
 
