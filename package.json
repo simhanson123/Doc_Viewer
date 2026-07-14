@@ -1,7 +1,7 @@
 {
   "name": "onjeom",
-  "version": "0.4.1",
-  "description": "온점 — Multi-format document viewer (Windows, Linux, Android)",
+  "version": "0.4.2",
+  "description": "Onjeom — multi-format document viewer with freehand annotation (Windows, Linux, Android)",
   "author": "Onjeom Contributors",
   "license": "MIT",
   "main": "dist-electron/main.js",
@@ -41,7 +41,7 @@
       "!docs/**/*"
     ],
     "asarUnpack": [
-      "dist/assets/**/*"
+      "dist/**/*"
     ],
     "win": {
       "target": [
@@ -72,9 +72,7 @@
         }
       ],
       "category": "Office",
-      "artifactName": "${productName}-${version}-linux-${arch}.${ext}",
-      "synopsis": "Multi-format document viewer with annotation",
-      "description": "온점 — MD, PDF, EPUB, DOCX viewer with freehand notes"
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,

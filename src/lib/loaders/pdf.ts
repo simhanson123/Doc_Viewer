@@ -3,128 +3,129 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { DocumentModel, PageContent } from '@/types';
 import { PAGE_W, PAGE_H } from '@/types';
 
-// Vite emits a hashed asset URL for the worker
+// Vite hashed worker asset (relative, e.g. ./assets/pdf.worker.min-xxx.mjs)
 import pdfWorkerAsset from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-const docCache = new WeakMap<ArrayBuffer, Promise<PDFDocumentProxy>>();
-let workerInit: Promise<void> | null = null;
+const docCache = new Map<string, Promise<PDFDocumentProxy>>();
+let workerInit: Promise<string> | null = null;
 
-function toFileUrl(absolutePath: string): string {
-  // Windows path → file:///C:/...
-  const normalized = absolutePath.replace(/\\/g, '/');
-  if (/^[a-zA-Z]:\//.test(normalized)) {
-    return 'file:///' + normalized;
-  }
-  if (normalized.startsWith('/')) return 'file://' + normalized;
-  return normalized;
-}
-
-function candidateWorkerUrls(): string[] {
-  const out: string[] = [];
-  const asset = String(pdfWorkerAsset);
-
-  // 1) Resolve relative to current page (index.html)
-  try {
-    const fromPage = new URL(asset, window.location.href).href;
-    out.push(fromPage);
-    if (fromPage.includes('app.asar')) {
-      out.push(fromPage.replace(/app\.asar/g, 'app.asar.unpacked'));
-    }
-  } catch {
-    /* ignore */
-  }
-
-  // 2) Resolve relative to this module (bundled chunk)
-  try {
-    const fromMod = new URL(asset, import.meta.url).href;
-    out.push(fromMod);
-    if (fromMod.includes('app.asar')) {
-      out.push(fromMod.replace(/app\.asar/g, 'app.asar.unpacked'));
-    }
-  } catch {
-    /* ignore */
-  }
-
-  // 3) Bare asset path next to index
-  if (!asset.includes('://')) {
-    out.push(asset.startsWith('./') ? asset : `./${asset.replace(/^\//, '')}`);
-  }
-
-  return [...new Set(out)];
+function bufferFingerprint(data: ArrayBuffer | Uint8Array): string {
+  const u8 = data instanceof Uint8Array ? data : new Uint8Array(data);
+  // length + first/last bytes — enough for cache key of opened files
+  const n = u8.byteLength;
+  const a = u8[0] ?? 0;
+  const b = u8[Math.min(100, n - 1)] ?? 0;
+  const c = u8[Math.min(1000, n - 1)] ?? 0;
+  return `${n}:${a}:${b}:${c}`;
 }
 
 /**
- * Load worker as Blob URL so Electron can run it even when file:// / asar is picky.
+ * Resolve worker script into a Blob URL.
+ * Order:
+ *  1) fetch from same origin (onjeom://app/assets/... in production)
+ *  2) fetch relative asset URL
+ *  3) IPC: main process reads worker file from disk/asar and returns base64
  */
-async function ensurePdfWorker(): Promise<void> {
+async function ensurePdfWorker(): Promise<string> {
   if (workerInit) return workerInit;
   workerInit = (async () => {
-    const urls = candidateWorkerUrls();
-    let lastErr: unknown;
-    for (const url of urls) {
+    const asset = String(pdfWorkerAsset);
+    const candidates: string[] = [];
+
+    // Production custom protocol + relative base
+    try {
+      candidates.push(new URL(asset, window.location.href).href);
+    } catch {
+      /* ignore */
+    }
+    try {
+      candidates.push(new URL(asset, import.meta.url).href);
+    } catch {
+      /* ignore */
+    }
+    if (asset.startsWith('./') || asset.startsWith('../') || asset.startsWith('assets/')) {
+      candidates.push(asset);
+    }
+
+    console.info('[onjeom pdf] worker candidates', candidates, 'location=', window.location.href);
+
+    for (const url of candidates) {
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-        const blob = await res.blob();
+        const res = await fetch(url, { cache: 'force-cache' });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const text = await res.text();
+        if (text.length < 1000) throw new Error('worker too small');
         const blobUrl = URL.createObjectURL(
-          new Blob([blob], { type: 'text/javascript' }),
+          new Blob([text], { type: 'text/javascript' }),
         );
         pdfjs.GlobalWorkerOptions.workerSrc = blobUrl;
-        console.info('[onjeom pdf] worker ready via', url);
-        return;
+        console.info('[onjeom pdf] worker OK via fetch', url, 'chars=', text.length);
+        return blobUrl;
       } catch (e) {
-        lastErr = e;
-        console.warn('[onjeom pdf] worker candidate failed', url, e);
+        console.warn('[onjeom pdf] fetch worker failed', url, e);
       }
     }
 
-    // Last resort: point workerSrc at first candidate (may still work in some builds)
-    if (urls[0]) {
-      pdfjs.GlobalWorkerOptions.workerSrc = urls[0].includes('app.asar')
-        ? urls[0].replace(/app\.asar/g, 'app.asar.unpacked')
-        : urls[0];
-      console.warn('[onjeom pdf] falling back to direct workerSrc', pdfjs.GlobalWorkerOptions.workerSrc, lastErr);
-      return;
+    // Main-process fallback (always works if packaging is correct)
+    if (window.onjeom?.pdfWorkerBase64) {
+      const packed = await window.onjeom.pdfWorkerBase64();
+      if (packed?.base64) {
+        const binary = atob(packed.base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blobUrl = URL.createObjectURL(
+          new Blob([bytes], { type: 'text/javascript' }),
+        );
+        pdfjs.GlobalWorkerOptions.workerSrc = blobUrl;
+        console.info(
+          '[onjeom pdf] worker OK via IPC',
+          packed.path,
+          'bytes=',
+          packed.bytes,
+        );
+        return blobUrl;
+      }
     }
+
     throw new Error(
-      'PDF worker를 불러오지 못했습니다. 앱을 다시 설치하거나 개발자 도구 콘솔을 확인하세요.',
+      'PDF worker load failed. Help → 경로 진단… 을 확인해 주세요 / Check Help → Path diagnostics',
     );
   })();
   return workerInit;
 }
 
-function asBuffer(data: ArrayBuffer | Uint8Array): Uint8Array {
-  if (data instanceof Uint8Array) return data;
-  return new Uint8Array(data);
-}
-
-function bufferKey(data: ArrayBuffer | Uint8Array): ArrayBuffer {
-  if (data instanceof ArrayBuffer) return data;
-  // Copy so we own a stable ArrayBuffer for WeakMap
-  const copy = new Uint8Array(data.byteLength);
-  copy.set(data);
-  return copy.buffer;
-}
-
 async function getPdf(data: ArrayBuffer | Uint8Array): Promise<PDFDocumentProxy> {
   await ensurePdfWorker();
-  const key = bufferKey(data);
+  const key = bufferFingerprint(data);
   let task = docCache.get(key);
   if (!task) {
-    const bytes = asBuffer(data);
-    // pdf.js wants a fresh copy it can transfer
-    const owned = bytes.slice().buffer;
+    const u8 = data instanceof Uint8Array ? data : new Uint8Array(data);
+    // Own a copy — pdf.js may transfer/detach the buffer
+    const owned = u8.slice();
+    // Verify PDF header
+    const head = String.fromCharCode(owned[0], owned[1], owned[2], owned[3], owned[4]);
+    if (!head.startsWith('%PDF')) {
+      console.warn('[onjeom pdf] missing %PDF header, got:', head, 'bytes=', owned.byteLength);
+    } else {
+      console.info('[onjeom pdf] getDocument bytes=', owned.byteLength, 'header=', head);
+    }
+
     task = pdfjs
       .getDocument({
         data: owned,
         useSystemFonts: true,
         isEvalSupported: false,
-        // Disable range/stream for local buffers
         disableAutoFetch: true,
         disableStream: true,
+        disableRange: true,
       })
-      .promise.catch((err) => {
+      .promise.then((pdf) => {
+        console.info('[onjeom pdf] loaded pages=', pdf.numPages);
+        return pdf;
+      })
+      .catch((err) => {
         docCache.delete(key);
+        console.error('[onjeom pdf] getDocument failed', err);
         throw err;
       });
     docCache.set(key, task);
@@ -137,10 +138,9 @@ export async function loadPdf(
   opts: { id: string; title: string; path?: string },
 ): Promise<DocumentModel> {
   if (!data || data.byteLength === 0) {
-    throw new Error('PDF data is empty / PDF 데이터가 비어 있습니다');
+    throw new Error('PDF data is empty');
   }
 
-  // Always own a copy so React state holds stable bytes
   const owned = data.slice(0);
   const pdf = await getPdf(owned);
   const pages: PageContent[] = [];
@@ -165,7 +165,6 @@ export async function loadPdf(
     face: 'serif',
     path: opts.path,
     pages,
-    // Store as ArrayBuffer for renderers
     raw: owned,
   };
 }
@@ -181,27 +180,25 @@ export async function renderPdfPage(
   const scale = Math.min(PAGE_W / unscaled.width, PAGE_H / unscaled.height) * 2;
   const viewport = page.getViewport({ scale });
   const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) throw new Error('Canvas 2D context unavailable');
+  if (!ctx) throw new Error('Canvas 2D unavailable');
 
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
-  // Display size matches page slot
+  const w = Math.max(1, Math.floor(viewport.width));
+  const h = Math.max(1, Math.floor(viewport.height));
+  canvas.width = w;
+  canvas.height = h;
   canvas.style.width = `${PAGE_W}px`;
   canvas.style.height = `${PAGE_H}px`;
   canvas.style.display = 'block';
+  canvas.style.background = '#fff';
 
-  // White background so "blank" never looks broken
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, w, h);
 
-  const renderTask = page.render({
+  await page.render({
     canvasContext: ctx,
     viewport,
     canvas,
-  } as Parameters<typeof page.render>[0]);
+  } as Parameters<typeof page.render>[0]).promise;
 
-  await renderTask.promise;
+  console.info('[onjeom pdf] rendered page', pageIndex + 1, `${w}x${h}`);
 }
-
-// silence unused helper if tree-shaken differently
-void toFileUrl;

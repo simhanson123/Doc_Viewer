@@ -12,8 +12,9 @@ const target = process.env.ONJEOM_TARGET || 'electron';
 const isStatic = target === 'web' || target === 'android';
 
 export default defineConfig({
-  // Capacitor / file:// need relative asset paths
-  base: isStatic ? './' : './',
+  // Always relative so Electron custom protocol + Capacitor resolve assets next to index.html
+  // Production Electron loads onjeom://app/index.html → assets at onjeom://app/assets/*
+  base: './',
   plugins: [
     react(),
     ...(!isStatic

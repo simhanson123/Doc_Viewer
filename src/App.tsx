@@ -484,6 +484,28 @@ function AppShell({
     document.body.style.background = theme.desk;
   }, [theme]);
 
+  // Startup path diagnostics (packaged Electron)
+  useEffect(() => {
+    void (async () => {
+      console.info('[onjeom] location', window.location.href);
+      console.info('[onjeom] bridge', !!window.onjeom, window.onjeomReady);
+      if (window.onjeom?.ping) {
+        try {
+          console.info('[onjeom] ping', await window.onjeom.ping());
+        } catch (e) {
+          console.error('[onjeom] ping failed', e);
+        }
+      }
+      if (window.onjeom?.paths) {
+        try {
+          console.info('[onjeom] paths', await window.onjeom.paths());
+        } catch (e) {
+          console.error('[onjeom] paths failed', e);
+        }
+      }
+    })();
+  }, []);
+
   const filteredLib = useMemo(() => {
     let list = library.slice();
     const q = (libQuery || settings.libraryQuery).trim().toLowerCase();

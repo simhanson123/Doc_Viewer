@@ -1,42 +1,191 @@
-import { app, BrowserWindow, dialog, ipcMain, shell, Menu } from 'electron';
+/**
+ * Onjeom — Electron main process
+ *
+ * Path model (packaged):
+ *   resources/app.asar/
+ *     package.json
+ *     dist/index.html          ← renderer (also asar.unpacked for workers)
+ *     dist/assets/*
+ *     dist-electron/main.js
+ *     dist-electron/preload.cjs
+ *
+ * We serve the renderer via custom protocol `onjeom://` so:
+ *   - fetch() / Workers work (CORS + supportFetchAPI)
+ *   - relative asset URLs resolve consistently
+ *   - asar vs asar.unpacked is handled when reading files
+ */
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  shell,
+  Menu,
+  protocol,
+  net,
+} from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** App root: project root in dev, asar root when packaged. */
-function appRoot() {
-  // dist-electron/ sits next to dist/ and package.json
+// Must be called before app is ready
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'onjeom',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+      bypassCSP: true,
+    },
+  },
+]);
+
+/** Project root in dev; asar root when packaged. */
+function appRoot(): string {
+  // dist-electron/main.js → parent is app root (or asar root)
   return path.join(__dirname, '..');
 }
 
-function distDir() {
+function distDir(): string {
   return path.join(appRoot(), 'dist');
 }
 
-function preloadPath() {
-  // Prefer CJS preload (contextBridge-friendly); fall back to .mjs
-  const cjs = path.join(__dirname, 'preload.cjs');
-  const mjs = path.join(__dirname, 'preload.mjs');
-  const js = path.join(__dirname, 'preload.js');
-  if (existsSync(cjs)) return cjs;
-  if (existsSync(js)) return js;
-  return mjs;
+/** Prefer unpacked path for a file if it exists (workers need non-asar). */
+function resolveReadable(filePath: string): string {
+  if (existsSync(filePath)) return filePath;
+  // app.asar → app.asar.unpacked
+  if (filePath.includes(`${path.sep}app.asar${path.sep}`)) {
+    const unpacked = filePath.replace(
+      `${path.sep}app.asar${path.sep}`,
+      `${path.sep}app.asar.unpacked${path.sep}`,
+    );
+    if (existsSync(unpacked)) return unpacked;
+  }
+  // also handle forward-slash form
+  if (filePath.includes('/app.asar/')) {
+    const unpacked = filePath.replace('/app.asar/', '/app.asar.unpacked/');
+    if (existsSync(unpacked)) return unpacked;
+  }
+  return filePath;
+}
+
+function preloadPath(): string {
+  const candidates = [
+    path.join(__dirname, 'preload.cjs'),
+    path.join(__dirname, 'preload.js'),
+    path.join(__dirname, 'preload.mjs'),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return candidates[0];
+}
+
+function logPaths(tag: string) {
+  console.log(`[onjeom] ${tag}`, {
+    isPackaged: app.isPackaged,
+    __dirname,
+    appRoot: appRoot(),
+    distDir: distDir(),
+    preload: preloadPath(),
+    indexHtml: path.join(distDir(), 'index.html'),
+    indexExists: existsSync(path.join(distDir(), 'index.html')),
+    resourcesPath: process.resourcesPath,
+  });
 }
 
 let mainWindow: BrowserWindow | null = null;
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
 function send(channel: string, ...args: unknown[]) {
-  mainWindow?.webContents.send(channel, ...args);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, ...args);
+  }
+}
+
+function parentWin(): BrowserWindow | undefined {
+  return mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
+}
+
+function mimeFor(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  const map: Record<string, string> = {
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+    '.mjs': 'text/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf',
+    '.map': 'application/json',
+  };
+  return map[ext] || 'application/octet-stream';
+}
+
+/**
+ * onjeom://app/<path>  →  dist/<path>
+ * Examples:
+ *   onjeom://app/index.html
+ *   onjeom://app/assets/index-xxx.js
+ *   onjeom://app/assets/pdf.worker.min-xxx.mjs
+ */
+function registerAppProtocol() {
+  protocol.handle('onjeom', async (request) => {
+    try {
+      const u = new URL(request.url);
+      // pathname is like /index.html or /assets/foo.js
+      let rel = decodeURIComponent(u.pathname).replace(/^\/+/, '');
+      if (!rel || rel.endsWith('/')) rel = path.posix.join(rel, 'index.html');
+
+      // Prevent path traversal
+      const safeRel = path.normalize(rel).replace(/^(\.\.(\/|\\|$))+/, '');
+      let filePath = path.join(distDir(), safeRel);
+      filePath = resolveReadable(filePath);
+
+      if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+        console.error('[onjeom] protocol 404', request.url, '→', filePath);
+        return new Response('Not Found: ' + safeRel, {
+          status: 404,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      }
+
+      // Use net.fetch(file URL) so large assets stream correctly
+      const res = await net.fetch(pathToFileURL(filePath).href);
+      // Clone with correct MIME (file URLs sometimes get wrong type)
+      const buf = await res.arrayBuffer();
+      return new Response(buf, {
+        status: 200,
+        headers: {
+          'Content-Type': mimeFor(filePath),
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-cache',
+        },
+      });
+    } catch (err) {
+      console.error('[onjeom] protocol error', request.url, err);
+      return new Response(String(err), {
+        status: 500,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
+  });
 }
 
 function createWindow() {
+  logPaths('createWindow');
   const preload = preloadPath();
-  console.log('[onjeom] preload:', preload);
-  console.log('[onjeom] dist:', distDir());
 
   mainWindow = new BrowserWindow({
     width: 1360,
@@ -51,15 +200,26 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      // Needed so pdf.js worker / assets load reliably from asar/file://
       webSecurity: true,
+      // Allow loading local workers / blobs
+      allowRunningInsecureContent: false,
     },
   });
 
   mainWindow.once('ready-to-show', () => mainWindow?.show());
 
   mainWindow.webContents.on('did-fail-load', (_e, code, desc, url) => {
-    console.error('[onjeom] did-fail-load', code, desc, url);
+    console.error('[onjeom] did-fail-load', { code, desc, url });
+    dialog.showErrorBox(
+      '온점 — 로드 실패',
+      `code=${code}\n${desc}\n\nurl=${url}\n\ndist=${distDir()}`,
+    );
+  });
+
+  mainWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    if (level >= 2) {
+      console.log(`[renderer:${level}] ${message} (${sourceId}:${line})`);
+    }
   });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -69,17 +229,12 @@ function createWindow() {
 
   if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
-    // DevTools in dev only
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
-    const indexHtml = path.join(distDir(), 'index.html');
-    if (!existsSync(indexHtml)) {
-      dialog.showErrorBox(
-        '온점',
-        `UI 파일을 찾을 수 없습니다:\n${indexHtml}\n\n앱을 다시 빌드해 주세요.`,
-      );
-    }
-    mainWindow.loadFile(indexHtml);
+    // Production: custom protocol (NOT file://)
+    const entry = 'onjeom://app/index.html';
+    console.log('[onjeom] loadURL', entry);
+    mainWindow.loadURL(entry);
   }
 
   buildMenu();
@@ -128,11 +283,7 @@ function buildMenu() {
     {
       label: '편집',
       submenu: [
-        {
-          label: '실행 취소',
-          accelerator: 'CmdOrCtrl+Z',
-          click: () => send('menu:undo'),
-        },
+        { label: '실행 취소', accelerator: 'CmdOrCtrl+Z', click: () => send('menu:undo') },
         {
           label: '다시 실행',
           accelerator: 'CmdOrCtrl+Shift+Z',
@@ -148,11 +299,7 @@ function buildMenu() {
     {
       label: '보기',
       submenu: [
-        {
-          label: '설정',
-          accelerator: 'CmdOrCtrl+,',
-          click: () => send('menu:settings'),
-        },
+        { label: '설정', accelerator: 'CmdOrCtrl+,', click: () => send('menu:settings') },
         {
           label: '단축키 도움말',
           accelerator: 'CmdOrCtrl+/',
@@ -167,7 +314,6 @@ function buildMenu() {
             mainWindow.setFullScreen(!mainWindow.isFullScreen());
           },
         },
-        { role: 'togglefullscreen', label: '전체 화면 (시스템)' },
         { type: 'separator' },
         { role: 'reload', label: '새로고침' },
         { role: 'toggleDevTools', label: '개발자 도구' },
@@ -183,12 +329,24 @@ function buildMenu() {
         {
           label: '온점 정보',
           click: () => {
-            dialog.showMessageBox(mainWindow!, {
+            dialog.showMessageBox(parentWin()!, {
               type: 'info',
               title: '온점',
-              message: '온점 (Onjeom) v0.3',
+              message: `온점 (Onjeom) v${app.getVersion()}`,
               detail:
                 'Multi-format document viewer with freehand annotation.\nMD · PDF · EPUB · DOCX\n\nMIT License',
+            });
+          },
+        },
+        {
+          label: '경로 진단…',
+          click: () => {
+            const info = collectPathDiagnostics();
+            dialog.showMessageBox(parentWin()!, {
+              type: 'info',
+              title: '경로 진단',
+              message: 'Onjeom paths',
+              detail: JSON.stringify(info, null, 2),
             });
           },
         },
@@ -198,28 +356,59 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-const OPEN_FILTERS: Electron.FileFilter[] = [
-  {
-    name: 'Documents',
-    extensions: ['md', 'markdown', 'txt', 'pdf', 'epub', 'docx'],
-  },
-  { name: 'Markdown', extensions: ['md', 'markdown'] },
-  { name: 'PDF', extensions: ['pdf'] },
-  { name: 'EPUB', extensions: ['epub'] },
-  { name: 'Word', extensions: ['docx'] },
-  { name: 'Text', extensions: ['txt'] },
-  { name: 'All Files', extensions: ['*'] },
-];
+function collectPathDiagnostics() {
+  const dist = distDir();
+  let assets: string[] = [];
+  try {
+    assets = readdirSync(path.join(dist, 'assets')).slice(0, 40);
+  } catch {
+    assets = ['(missing)'];
+  }
+  const worker = assets.find((f) => f.includes('pdf.worker')) || null;
+  const workerPath = worker ? resolveReadable(path.join(dist, 'assets', worker)) : null;
+  return {
+    version: app.getVersion(),
+    isPackaged: app.isPackaged,
+    __dirname,
+    appRoot: appRoot(),
+    distDir: dist,
+    distExists: existsSync(dist),
+    indexHtml: path.join(dist, 'index.html'),
+    indexExists: existsSync(path.join(dist, 'index.html')),
+    preload: preloadPath(),
+    preloadExists: existsSync(preloadPath()),
+    resourcesPath: process.resourcesPath,
+    workerFile: worker,
+    workerPath,
+    workerExists: workerPath ? existsSync(workerPath) : false,
+    assetsSample: assets.slice(0, 15),
+  };
+}
+
+// ─── Document open / save ───────────────────────────────────────────
 
 export type OpenedDoc = {
   path: string;
   name: string;
   ext: string;
-  /** utf8 text OR base64 for binary — reliable over IPC/contextBridge */
   data: string;
   isText: boolean;
   encoding: 'utf8' | 'base64';
+  byteLength: number;
 };
+
+const OPEN_FILTERS: Electron.FileFilter[] = [
+  {
+    name: 'Documents',
+    extensions: ['md', 'markdown', 'txt', 'pdf', 'epub', 'docx'],
+  },
+  { name: 'PDF', extensions: ['pdf'] },
+  { name: 'Markdown', extensions: ['md', 'markdown'] },
+  { name: 'EPUB', extensions: ['epub'] },
+  { name: 'Word', extensions: ['docx'] },
+  { name: 'Text', extensions: ['txt'] },
+  { name: 'All Files', extensions: ['*'] },
+];
 
 async function readDocument(filePath: string): Promise<OpenedDoc> {
   const extRaw = path.extname(filePath).toLowerCase().replace('.', '');
@@ -228,6 +417,14 @@ async function readDocument(filePath: string): Promise<OpenedDoc> {
   const buffer = await fs.readFile(filePath);
   const textExts = new Set(['md', 'markdown', 'txt', 'html', 'htm']);
   const isText = textExts.has(extRaw) || textExts.has(ext);
+
+  console.log('[onjeom] readDocument', {
+    filePath,
+    ext,
+    bytes: buffer.byteLength,
+    isText,
+  });
+
   if (isText) {
     return {
       path: filePath,
@@ -236,8 +433,18 @@ async function readDocument(filePath: string): Promise<OpenedDoc> {
       data: buffer.toString('utf8'),
       isText: true,
       encoding: 'utf8',
+      byteLength: buffer.byteLength,
     };
   }
+
+  // PDF magic check
+  if (ext === 'pdf') {
+    const head = buffer.subarray(0, 5).toString('utf8');
+    if (!head.startsWith('%PDF')) {
+      console.warn('[onjeom] file has .pdf extension but no %PDF header', head);
+    }
+  }
+
   return {
     path: filePath,
     name,
@@ -245,11 +452,8 @@ async function readDocument(filePath: string): Promise<OpenedDoc> {
     data: buffer.toString('base64'),
     isText: false,
     encoding: 'base64',
+    byteLength: buffer.byteLength,
   };
-}
-
-function parentWin(): BrowserWindow | undefined {
-  return mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
 }
 
 ipcMain.handle('dialog:openFile', async () => {
@@ -259,12 +463,18 @@ ipcMain.handle('dialog:openFile', async () => {
       properties: ['openFile', 'multiSelections'],
       filters: OPEN_FILTERS,
     });
-    if (result.canceled || !result.filePaths.length) return null;
+    if (result.canceled || !result.filePaths.length) {
+      console.log('[onjeom] openFile canceled');
+      return null;
+    }
     const files: OpenedDoc[] = [];
     for (const p of result.filePaths) {
       files.push(await readDocument(p));
     }
-    // Always return array for stable renderer handling
+    console.log(
+      '[onjeom] openFile ok',
+      files.map((f) => ({ name: f.name, ext: f.ext, bytes: f.byteLength })),
+    );
     return files;
   } catch (err) {
     console.error('[onjeom] openFile failed', err);
@@ -272,9 +482,7 @@ ipcMain.handle('dialog:openFile', async () => {
   }
 });
 
-ipcMain.handle('fs:readFile', async (_e, filePath: string) => {
-  return readDocument(filePath);
-});
+ipcMain.handle('fs:readFile', async (_e, filePath: string) => readDocument(filePath));
 
 ipcMain.handle(
   'dialog:saveFile',
@@ -357,10 +565,34 @@ ipcMain.handle('shell:showItem', async (_e, p: string) => {
   shell.showItemInFolder(p);
 });
 
-// Tell renderer whether preload bridge is healthy
-ipcMain.handle('app:ping', async () => ({ ok: true, version: app.getVersion() }));
+ipcMain.handle('app:ping', async () => ({
+  ok: true,
+  version: app.getVersion(),
+  protocol: 'onjeom',
+}));
+
+ipcMain.handle('app:paths', async () => collectPathDiagnostics());
+
+/**
+ * Serve pdf.worker bytes to renderer if fetch fails (ultimate fallback).
+ */
+ipcMain.handle('app:pdfWorkerBase64', async () => {
+  const dist = distDir();
+  const assetsDir = path.join(dist, 'assets');
+  if (!existsSync(assetsDir)) return null;
+  const worker = readdirSync(assetsDir).find((f) => f.includes('pdf.worker'));
+  if (!worker) return null;
+  const p = resolveReadable(path.join(assetsDir, worker));
+  const buf = readFileSync(p);
+  console.log('[onjeom] pdfWorkerBase64', p, buf.byteLength);
+  return { name: worker, base64: buf.toString('base64'), path: p, bytes: buf.byteLength };
+});
 
 app.whenReady().then(() => {
+  if (!VITE_DEV_SERVER_URL) {
+    registerAppProtocol();
+  }
+  logPaths('whenReady');
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

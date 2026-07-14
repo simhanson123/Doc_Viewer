@@ -7,6 +7,7 @@ export type OpenedFile = {
   data: string;
   isText: boolean;
   encoding: 'utf8' | 'base64';
+  byteLength?: number;
 };
 
 type MenuChannel =
@@ -29,8 +30,7 @@ function onMenu(channel: MenuChannel, cb: () => void): () => void {
 }
 
 const api = {
-  openFile: (): Promise<OpenedFile[] | null> =>
-    ipcRenderer.invoke('dialog:openFile'),
+  openFile: (): Promise<OpenedFile[] | null> => ipcRenderer.invoke('dialog:openFile'),
   readFile: (filePath: string): Promise<OpenedFile> =>
     ipcRenderer.invoke('fs:readFile', filePath),
   saveFile: (opts: {
@@ -48,7 +48,15 @@ const api = {
     ipcRenderer.invoke('ann:readAll', folder),
   openPath: (p: string): Promise<string> => ipcRenderer.invoke('shell:openPath', p),
   showItem: (p: string): Promise<void> => ipcRenderer.invoke('shell:showItem', p),
-  ping: (): Promise<{ ok: boolean; version: string }> => ipcRenderer.invoke('app:ping'),
+  ping: (): Promise<{ ok: boolean; version: string; protocol?: string }> =>
+    ipcRenderer.invoke('app:ping'),
+  paths: (): Promise<Record<string, unknown>> => ipcRenderer.invoke('app:paths'),
+  pdfWorkerBase64: (): Promise<{
+    name: string;
+    base64: string;
+    path: string;
+    bytes: number;
+  } | null> => ipcRenderer.invoke('app:pdfWorkerBase64'),
   onMenuOpenFile: (cb: () => void) => onMenu('menu:open-file', cb),
   onMenuExportPdf: (cb: () => void) => onMenu('menu:export-pdf', cb),
   onMenuExportJson: (cb: () => void) => onMenu('menu:export-json', cb),
@@ -64,8 +72,8 @@ const api = {
 try {
   contextBridge.exposeInMainWorld('onjeom', api);
   contextBridge.exposeInMainWorld('onjeomReady', true);
+  console.log('[onjeom preload] bridge exposed');
 } catch (err) {
-  // Last resort if contextBridge fails
   console.error('[onjeom preload] expose failed', err);
 }
 

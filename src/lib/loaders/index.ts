@@ -34,7 +34,25 @@ export async function loadDocument(file: RawFile): Promise<DocumentModel> {
       return loadText(String(file.data), base);
     }
     if (ext === 'pdf') {
-      const buf = toArrayBuffer(file.data, file.encoding || (file.isText ? 'utf8' : 'base64'));
+      const enc = file.encoding || (file.isText ? 'utf8' : 'base64');
+      const buf = toArrayBuffer(file.data, enc);
+      console.info('[onjeom load] PDF', {
+        name: file.name,
+        encoding: enc,
+        inType: typeof file.data,
+        outBytes: buf.byteLength,
+        path: file.path,
+      });
+      if (buf.byteLength < 8) {
+        throw new Error(`PDF too small (${buf.byteLength} bytes) — open path / IPC may be broken`);
+      }
+      const head = new Uint8Array(buf, 0, Math.min(5, buf.byteLength));
+      const magic = String.fromCharCode(...head);
+      if (!magic.startsWith('%PDF')) {
+        throw new Error(
+          `Not a valid PDF (header="${magic}"). encoding=${enc} bytes=${buf.byteLength}`,
+        );
+      }
       return loadPdf(buf, base);
     }
     if (ext === 'epub') {
