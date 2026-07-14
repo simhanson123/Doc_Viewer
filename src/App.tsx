@@ -374,7 +374,7 @@ function AppShell({
     }
   }, [ingestFiles]);
 
-  // Playwright E2E: window.__onjeomE2EOpen(['C:\\path\\file.pdf'])
+  // Lightweight open hook (full E2E API registered after goPage/removeFromLibrary)
   useEffect(() => {
     (window as unknown as { __onjeomE2EOpen?: (paths: string[]) => Promise<void> }).__onjeomE2EOpen =
       async (paths: string[]) => {
@@ -586,6 +586,165 @@ function AppShell({
     },
     [persistMeta, showToast, t],
   );
+
+  // Playwright functional E2E API (after goPage / removeFromLibrary exist)
+  useEffect(() => {
+    type E2EApi = {
+      open: (paths: string[]) => Promise<void>;
+      getState: () => Record<string, unknown>;
+      setTool: (t: Tool) => void;
+      setMode: (m: ViewMode) => void;
+      goPage: (p: number, heading?: string) => void;
+      addTestStroke: () => void;
+      addTestShape: () => void;
+      undo: () => void;
+      redo: () => void;
+      toggleMark: () => void;
+      toggleHighlight: (sentId?: string) => void;
+      exportPdfBase64: (password?: string) => Promise<{
+        ok: boolean;
+        bytes: number;
+        b64head: string;
+        error?: string;
+      }>;
+      removeActiveFromLibrary: () => void;
+      ensureRightPanel: (tab?: 'toc' | 'search' | 'highlights' | 'notes') => void;
+      setZoom: (z: number) => void;
+    };
+
+    const api: E2EApi = {
+      open: async (paths: string[]) => {
+        const list = await platformOpenPaths(paths);
+        if (list?.length) await ingestFiles(list);
+      },
+      getState: () => {
+        const pa = annApi.pageAnn(page);
+        return {
+          page,
+          pages: doc?.pages.length ?? 0,
+          mode,
+          tool,
+          fmt: doc?.fmt ?? '',
+          title: doc?.title ?? '',
+          libraryCount: library.length,
+          strokeCount: pa.strokes?.length ?? 0,
+          shapeCount: pa.shapes?.length ?? 0,
+          noteCount: pa.notes?.length ?? 0,
+          canUndo: annApi.canUndo,
+          canRedo: annApi.canRedo,
+          marked: !!(doc && (annApi.ann.marks || []).includes(page)),
+          showRightPanel: settings.showRightPanel,
+          rightPanelTab: settings.rightPanelTab,
+          error,
+        };
+      },
+      setTool: (t) => setTool(t),
+      setMode: (m) => setMode(m),
+      goPage: (p, heading) => goPage(p, heading ? { heading } : undefined),
+      addTestStroke: () => {
+        if (!doc) return;
+        annApi.pushHist();
+        annApi.addStroke(page, {
+          tool: 'pen',
+          c: penColor,
+          w: penW,
+          pts: [
+            { x: 80, y: 120, p: 0.5 },
+            { x: 140, y: 160, p: 0.7 },
+            { x: 200, y: 140, p: 0.4 },
+          ],
+          pressure: true,
+        });
+      },
+      addTestShape: () => {
+        if (!doc) return;
+        annApi.pushHist();
+        annApi.addShape(page, {
+          shape: 'rect',
+          x0: 60,
+          y0: 80,
+          x1: 180,
+          y1: 160,
+          c: penColor,
+          w: 2,
+        });
+      },
+      undo: () => annApi.undo(),
+      redo: () => annApi.redoAct(),
+      toggleMark: () => {
+        annApi.pushHist();
+        annApi.toggleMark(page);
+      },
+      toggleHighlight: (sentId) => {
+        annApi.pushHist();
+        const id = sentId || `${doc?.id || 'doc'}|${page}|0|0`;
+        annApi.toggleHighlight(id, hlColor);
+      },
+      exportPdfBase64: async (password) => {
+        if (!doc) return { ok: false, bytes: 0, b64head: '', error: 'no doc' };
+        try {
+          const blob = await exportAnnotatedPdf(doc, annApi.ann, theme, {
+            vector: settings.vectorPdfExport,
+            pressureCurve: settings.pressureCurve,
+            userPassword: password,
+          });
+          const buf = new Uint8Array(await blob.arrayBuffer());
+          let binary = '';
+          const n = Math.min(buf.length, 64);
+          for (let i = 0; i < n; i++) binary += String.fromCharCode(buf[i]);
+          return {
+            ok: buf.length > 100 && buf[0] === 0x25,
+            bytes: buf.length,
+            b64head: btoa(binary).slice(0, 40),
+          };
+        } catch (e) {
+          return {
+            ok: false,
+            bytes: 0,
+            b64head: '',
+            error: e instanceof Error ? e.message : String(e),
+          };
+        }
+      },
+      removeActiveFromLibrary: () => {
+        if (doc) removeFromLibrary(doc.id);
+      },
+      ensureRightPanel: (tab = 'toc') => {
+        patch({ showRightPanel: true, rightPanelTab: tab });
+      },
+      setZoom: (z) => setZoom(Math.max(0.5, Math.min(2, z))),
+    };
+
+    const w = window as unknown as {
+      __onjeomE2EOpen?: (paths: string[]) => Promise<void>;
+      __onjeomE2E?: E2EApi;
+    };
+    w.__onjeomE2EOpen = api.open;
+    w.__onjeomE2E = api;
+    return () => {
+      delete w.__onjeomE2E;
+    };
+  }, [
+    ingestFiles,
+    annApi,
+    page,
+    doc,
+    mode,
+    tool,
+    library.length,
+    penColor,
+    penW,
+    hlColor,
+    theme,
+    settings.vectorPdfExport,
+    settings.pressureCurve,
+    settings.showRightPanel,
+    settings.rightPanelTab,
+    error,
+    goPage,
+    removeFromLibrary,
+    patch,
+  ]);
 
   const nav = useCallback(
     (dir: number) => {
@@ -951,6 +1110,7 @@ function AppShell({
             <button
               key={m}
               type="button"
+              data-testid={`mode-${m}`}
               className={`seg-btn${mode === m ? ' active' : ''}`}
               onClick={() => {
                 setMode(m);
@@ -1319,7 +1479,11 @@ function AppShell({
             }}
           />
 
-          <div className="page-pill" style={{ borderColor: theme.chromeBorder, color: theme.muted }}>
+          <div
+            className="page-pill"
+            data-testid="page-pill"
+            style={{ borderColor: theme.chromeBorder, color: theme.muted }}
+          >
             {pageLabel}
           </div>
           <div className="progress-track">

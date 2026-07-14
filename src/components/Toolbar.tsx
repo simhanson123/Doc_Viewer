@@ -152,11 +152,11 @@ export function Toolbar({
         </div>
       )}
 
-      <div className="tool-dock">
-        <button type="button" title={tr('toolSelect')} className={tb('select')} style={activeBg('select')} onClick={() => onTool('select')}>
+      <div className="tool-dock" data-testid="toolbar">
+        <button type="button" data-testid="tool-select" title={tr('toolSelect')} className={tb('select')} style={activeBg('select')} onClick={() => onTool('select')}>
           <IconSelect />
         </button>
-        <button type="button" title={tr('toolTextHl')} className={tb('texthl')} style={activeBg('texthl')} onClick={() => onTool('texthl')}>
+        <button type="button" data-testid="tool-texthl" title={tr('toolTextHl')} className={tb('texthl')} style={activeBg('texthl')} onClick={() => onTool('texthl')}>
           <span
             style={{
               fontFamily: 'var(--font-reading-serif)',
@@ -170,40 +170,40 @@ export function Toolbar({
             A
           </span>
         </button>
-        <button type="button" title={tr('toolHl')} className={tb('hl')} style={activeBg('hl')} onClick={() => onTool('hl')}>
+        <button type="button" data-testid="tool-hl" title={tr('toolHl')} className={tb('hl')} style={activeBg('hl')} onClick={() => onTool('hl')}>
           <IconHl />
         </button>
-        <button type="button" title={tr('toolPen')} className={tb('pen')} style={activeBg('pen')} onClick={() => onTool('pen')}>
+        <button type="button" data-testid="tool-pen" title={tr('toolPen')} className={tb('pen')} style={activeBg('pen')} onClick={() => onTool('pen')}>
           <IconPen />
         </button>
-        <button type="button" title={tr('toolLine')} className={tb('line')} style={activeBg('line')} onClick={() => onTool('line')}>
+        <button type="button" data-testid="tool-line" title={tr('toolLine')} className={tb('line')} style={activeBg('line')} onClick={() => onTool('line')}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <path d="M5 19 L19 5" />
           </svg>
         </button>
-        <button type="button" title={tr('toolEraser')} className={tb('eraser')} style={activeBg('eraser')} onClick={() => onTool('eraser')}>
+        <button type="button" data-testid="tool-eraser" title={tr('toolEraser')} className={tb('eraser')} style={activeBg('eraser')} onClick={() => onTool('eraser')}>
           <IconEraser />
         </button>
-        <button type="button" title={tr('toolShape')} className={tb('shape')} style={activeBg('shape')} onClick={() => onTool('shape')}>
+        <button type="button" data-testid="tool-shape" title={tr('toolShape')} className={tb('shape')} style={activeBg('shape')} onClick={() => onTool('shape')}>
           <IconShape />
         </button>
-        <button type="button" title={tr('toolNote')} className={tb('note')} style={activeBg('note')} onClick={() => onTool('note')}>
+        <button type="button" data-testid="tool-note" title={tr('toolNote')} className={tb('note')} style={activeBg('note')} onClick={() => onTool('note')}>
           <IconNote />
         </button>
-        <button type="button" title={tr('toolLaser')} className={tb('laser')} style={activeBg('laser')} onClick={() => onTool('laser')}>
+        <button type="button" data-testid="tool-laser" title={tr('toolLaser')} className={tb('laser')} style={activeBg('laser')} onClick={() => onTool('laser')}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.4" />
             <circle cx="12" cy="12" r="7" />
           </svg>
         </button>
         <div className="tool-sep" />
-        <button type="button" title={tr('toolUndo')} className="tool-btn" disabled={!canUndo} onClick={onUndo}>
+        <button type="button" data-testid="tool-undo" title={tr('toolUndo')} className="tool-btn" disabled={!canUndo} onClick={onUndo}>
           <IconUndo />
         </button>
-        <button type="button" title={tr('toolRedo')} className="tool-btn" disabled={!canRedo} onClick={onRedo}>
+        <button type="button" data-testid="tool-redo" title={tr('toolRedo')} className="tool-btn" disabled={!canRedo} onClick={onRedo}>
           <IconRedo />
         </button>
-        <button type="button" title={tr('toolClearPage')} className="tool-btn" onClick={onClearPage}>
+        <button type="button" data-testid="tool-clear" title={tr('toolClearPage')} className="tool-btn" onClick={onClearPage}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
             <path d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

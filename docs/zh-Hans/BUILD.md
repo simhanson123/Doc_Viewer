@@ -1,6 +1,6 @@
 # Onjeom — Build (简体中文)
 
-**v0.4.7** · Full guide: [en/BUILD](../en/BUILD.md)
+**v0.4.9** · Full guide: [en/BUILD](../en/BUILD.md)
 
 ```bash
 npm install
