@@ -29,6 +29,11 @@ const ko: Messages = {
   pwdNeed: '이 PDF는 암호가 필요합니다.',
   pwdIncorrect: '암호가 틀렸습니다. 다시 입력하세요.',
   toastPdfProtected: '암호 PDF 저장됨',
+  removeFromLibrary: '서재에서 제거',
+  removeFromLibraryHint: '서재에서만 제거 (원본 파일은 유지)',
+  removeFromLibraryConfirm:
+    '이 문서를 서재에서 제거할까요?\n\n디스크의 원본 파일은 삭제되지 않습니다.',
+  toastRemovedFromLib: '서재에서 제거했습니다 (원본 파일 유지)',
   exportJson: '필기 JSON',
   importJson: 'JSON 가져오기',
   autoSaveLocal: '필기는 이 기기에 자동 저장됩니다',

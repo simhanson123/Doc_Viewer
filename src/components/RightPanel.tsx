@@ -9,7 +9,7 @@ type Props = {
   settings: AppSettings;
   theme: ThemeTokens;
   accent: string;
-  onGoPage: (p: number) => void;
+  onGoPage: (p: number, heading?: string) => void;
   onPatch: (p: Partial<AppSettings>) => void;
   onRemoveHighlight: (id: string) => void;
 };
@@ -72,18 +72,28 @@ export function RightPanel({
 
       <div className="right-body">
         {tab === 'toc' && (
-          <div className="toc-list">
-            {toc.map((item, i) => (
-              <button
-                key={i}
-                type="button"
-                className={`toc-item level-${item.level}`}
-                onClick={() => onGoPage(item.page)}
-              >
-                <span>{item.title}</span>
-                <span className="toc-page">{item.page + 1}</span>
-              </button>
-            ))}
+          <div className="toc-list" data-testid="toc-list">
+            {toc.length === 0 ? (
+              <div className="empty-marks">{t('noResults')}</div>
+            ) : (
+              toc.map((item, i) => (
+                <button
+                  key={`${item.page}-${i}-${item.title.slice(0, 24)}`}
+                  type="button"
+                  className={`toc-item level-${item.level}`}
+                  data-testid="toc-item"
+                  title={`${item.title} → ${t('pageN', { n: item.page + 1 })}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onGoPage(item.page, item.title);
+                  }}
+                >
+                  <span className="toc-title">{item.title}</span>
+                  <span className="toc-page">{item.page + 1}</span>
+                </button>
+              ))
+            )}
           </div>
         )}
 

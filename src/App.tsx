@@ -539,13 +539,52 @@ function AppShell({
   }, [ingestFiles]);
 
   const goPage = useCallback(
-    (p: number) => {
+    (p: number, opts?: { heading?: string }) => {
       if (!doc) return;
-      let np = Math.max(0, Math.min(doc.pages.length - 1, p));
+      let np = Math.max(0, Math.min(doc.pages.length - 1, Math.floor(Number(p) || 0)));
       if (mode === 'spread') np -= np % 2;
       setPage(np);
+      // Scroll into view (scroll/reflow/single) after paint
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          let target: Element | null = null;
+          if (opts?.heading) {
+            const headings = document.querySelectorAll('[data-heading]');
+            for (const el of headings) {
+              if ((el.getAttribute('data-heading') || '') === opts.heading) {
+                target = el;
+                break;
+              }
+            }
+          }
+          if (!target) {
+            target =
+              document.querySelector(`[data-page-root="${doc.id}-${np}"]`) ||
+              document.querySelector(`.reflow-section[data-page="${np}"]`);
+          }
+          target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
     },
     [doc, mode],
+  );
+
+  /** Remove from in-app library only — never deletes the original file on disk. */
+  const removeFromLibrary = useCallback(
+    (id: string) => {
+      setLibrary((lib) => {
+        const next = lib.filter((d) => d.id !== id);
+        persistMeta(next);
+        setDocId((cur) => {
+          if (cur !== id && next.some((d) => d.id === cur)) return cur;
+          return next[0]?.id || '';
+        });
+        return next;
+      });
+      setPage(0);
+      showToast(t('toastRemovedFromLib'));
+    },
+    [persistMeta, showToast, t],
   );
 
   const nav = useCallback(
@@ -1079,6 +1118,19 @@ function AppShell({
                               </option>
                             ))}
                         </select>
+                        <button
+                          type="button"
+                          className="mini-icon danger"
+                          data-testid="lib-remove"
+                          title={t('removeFromLibraryHint')}
+                          onClick={() => {
+                            if (window.confirm(t('removeFromLibraryConfirm'))) {
+                              removeFromLibrary(d.id);
+                            }
+                          }}
+                        >
+                          ×
+                        </button>
                       </div>
                     </div>
                   );
@@ -1309,7 +1361,7 @@ function AppShell({
             settings={settings}
             theme={theme}
             accent={accent}
-            onGoPage={goPage}
+            onGoPage={(p, heading) => goPage(p, heading ? { heading } : undefined)}
             onPatch={patch}
             onRemoveHighlight={(id) => {
               annApi.pushHist();

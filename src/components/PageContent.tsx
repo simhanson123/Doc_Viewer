@@ -206,6 +206,8 @@ function BlockView({
   if (block.k === 'h1') {
     return (
       <div
+        data-heading={block.t}
+        data-toc-level="1"
         style={{
           fontFamily: face,
           fontSize: 27 * fs,
@@ -223,6 +225,8 @@ function BlockView({
   if (block.k === 'h2') {
     return (
       <div
+        data-heading={block.t}
+        data-toc-level="2"
         style={{
           fontFamily: face,
           fontSize: 18 * fs,

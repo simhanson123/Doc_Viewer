@@ -99,7 +99,12 @@ function paginate(blocks: ContentBlock[], maxBlocks = 6): PageContent[] {
 
   for (const b of blocks) {
     const bw = w(b);
-    if (cur.length && (weight + bw > maxBlocks || cur.length >= 8)) {
+    // Start a new page on major headings so Contents/TOC jumps work clearly
+    if (cur.length && (b.k === 'h1' || (b.k === 'h2' && weight > 2))) {
+      pages.push({ kind: 'blocks', blocks: cur });
+      cur = [];
+      weight = 0;
+    } else if (cur.length && (weight + bw > maxBlocks || cur.length >= 8)) {
       pages.push({ kind: 'blocks', blocks: cur });
       cur = [];
       weight = 0;

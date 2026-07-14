@@ -67,14 +67,23 @@ test.afterAll(async () => {
   if (app) await app.close();
 });
 
-async function openFixture(name) {
+async function openFixture(name, wantFmt) {
   const full = join(fixtures, name);
   if (!existsSync(full)) throw new Error('missing fixture ' + full);
-  await page.evaluate(async (p) => {
-    if (!window.__onjeomE2EOpen) throw new Error('__onjeomE2EOpen missing');
-    await window.__onjeomE2EOpen([p]);
+  const err = await page.evaluate(async (p) => {
+    try {
+      if (!window.__onjeomE2EOpen) throw new Error('__onjeomE2EOpen missing');
+      await window.__onjeomE2EOpen([p]);
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e);
+    }
   }, full);
+  if (err) throw new Error(`openFixture ${name}: ${err}`);
   await page.waitForSelector('[data-testid="app-shell"]', { timeout: 30000 });
+  if (wantFmt) {
+    await expect(page.locator('[data-testid="fmt-chip"]')).toHaveText(wantFmt, { timeout: 15000 });
+  }
 }
 
 test('boots UI — not blank (no require crash)', async () => {

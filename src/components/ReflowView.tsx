@@ -113,6 +113,8 @@ function ReflowBlock({
   if (block.k === 'h1') {
     return (
       <h1
+        data-heading={block.t}
+        data-toc-level="1"
         style={{
           fontFamily: face,
           fontSize: 28 * fs,
@@ -128,6 +130,8 @@ function ReflowBlock({
   if (block.k === 'h2') {
     return (
       <h2
+        data-heading={block.t}
+        data-toc-level="2"
         style={{
           fontFamily: face,
           fontSize: 18 * fs,

@@ -327,7 +327,12 @@ export function DocumentPage(props: Props) {
     : 'none';
 
   return (
-    <div className="page-wrap" style={{ width: PAGE_W * zoom, height: PAGE_H * zoom }}>
+    <div
+      className="page-wrap"
+      style={{ width: PAGE_W * zoom, height: PAGE_H * zoom }}
+      data-page-root={`${doc.id}-${pageIndex}`}
+      data-page-index={pageIndex}
+    >
       <div
         ref={pageRootRef}
         className="page"

@@ -279,6 +279,49 @@ function drawTextVector(pdf: jsPDF, doc: DocumentModel, pageIndex: number, theme
   }
 }
 
+/** True if document text needs fonts beyond Latin-1 (CJK, Hangul, Arabic, …). */
+function documentNeedsUnicodeFont(doc: DocumentModel): boolean {
+  const nonLatin = /[^\u0000-\u024F\u1E00-\u1EFF\s]/;
+  for (const page of doc.pages) {
+    if (page.kind !== 'blocks') continue;
+    for (const b of page.blocks) {
+      const t =
+        b.k === 'p' || b.k === 'q'
+          ? b.sents.join('')
+          : b.k === 'h1' || b.k === 'h2' || b.k === 'meta' || b.k === 'code' || b.k === 'img'
+            ? b.t
+            : '';
+      if (t && nonLatin.test(t)) return true;
+    }
+  }
+  if (doc.title && nonLatin.test(doc.title)) return true;
+  return false;
+}
+
+/** Wrap for CJK + Latin (char-based, not only whitespace). */
+function wrapCanvasLine(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxW: number,
+): string[] {
+  const lines: string[] = [];
+  let cur = '';
+  for (const ch of text) {
+    const test = cur + ch;
+    if (ctx.measureText(test).width > maxW && cur) {
+      lines.push(cur);
+      cur = ch;
+    } else {
+      cur = test;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines.length ? lines : [''];
+}
+
+const EXPORT_FONT_STACK =
+  '"Noto Sans KR", "Noto Sans JP", "Noto Sans SC", "Noto Sans TC", "Noto Sans Arabic", "Noto Sans", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+
 async function renderPageCanvas(
   doc: DocumentModel,
   pageIndex: number,
@@ -294,42 +337,115 @@ async function renderPageCanvas(
   ctx.fillStyle = theme.paper;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Prefer on-screen page canvas if present (includes PDF + live layout)
   const live = document.querySelector(
     `[data-page-export="${doc.id}-${pageIndex}"] canvas`,
   ) as HTMLCanvasElement | null;
-  if (live && live.width > 0) {
+  const liveBody = document.querySelector(
+    `[data-page-export="${doc.id}-${pageIndex}"] .page-content`,
+  ) as HTMLElement | null;
+
+  if (live && live.width > 0 && liveBody?.getAttribute('data-page-kind') === 'pdf') {
     ctx.drawImage(live, 0, 0, canvas.width, canvas.height);
   } else {
-    const lines = blockText(doc, pageIndex);
-    ctx.fillStyle = theme.ink;
-    ctx.font = `${14 * scale}px "Noto Sans KR", "Gowun Batang", serif`;
-    let y = 50 * scale;
+    // Draw structured blocks with Unicode-capable fonts (fixes MD/HTML/DOCX Hangul garble)
+    const page = doc.pages[pageIndex];
+    let y = 48 * scale;
+    const x = 50 * scale;
     const maxW = (PAGE_W - 100) * scale;
-    for (const line of lines) {
-      const words = line.split(/\s+/);
-      let cur = '';
-      for (const w of words) {
-        const t = cur ? cur + ' ' + w : w;
-        if (ctx.measureText(t).width > maxW && cur) {
-          ctx.fillText(cur, 50 * scale, y);
-          y += 22 * scale;
-          cur = w;
-          if (y > (PAGE_H - 40) * scale) break;
-        } else cur = t;
+    const maxY = (PAGE_H - 40) * scale;
+    ctx.fillStyle = theme.ink;
+    ctx.textBaseline = 'top';
+
+    if (page && page.kind === 'blocks') {
+      for (const b of page.blocks) {
+        if (y > maxY) break;
+        if (b.k === 'h1') {
+          ctx.font = `700 ${22 * scale}px ${EXPORT_FONT_STACK}`;
+          for (const line of wrapCanvasLine(ctx, b.t, maxW)) {
+            if (y > maxY) break;
+            ctx.fillText(line, x, y);
+            y += 28 * scale;
+          }
+          y += 6 * scale;
+        } else if (b.k === 'h2') {
+          ctx.font = `700 ${15 * scale}px ${EXPORT_FONT_STACK}`;
+          for (const line of wrapCanvasLine(ctx, b.t, maxW)) {
+            if (y > maxY) break;
+            ctx.fillText(line, x, y);
+            y += 22 * scale;
+          }
+          y += 4 * scale;
+        } else if (b.k === 'meta') {
+          ctx.font = `500 ${10 * scale}px ${EXPORT_FONT_STACK}`;
+          ctx.fillStyle = theme.muted;
+          ctx.fillText(b.t, x, y);
+          ctx.fillStyle = theme.ink;
+          y += 18 * scale;
+        } else if (b.k === 'code') {
+          ctx.font = `400 ${10 * scale}px "IBM Plex Mono", "Consolas", monospace`;
+          const lines = b.t.split('\n').slice(0, 20);
+          const boxH = lines.length * 14 * scale + 12 * scale;
+          ctx.fillStyle = theme.codeBg || '#f0ebe0';
+          ctx.fillRect(x - 4 * scale, y - 4 * scale, maxW + 8 * scale, boxH);
+          ctx.fillStyle = theme.ink;
+          for (const line of lines) {
+            if (y > maxY) break;
+            ctx.fillText(line.slice(0, 120), x, y);
+            y += 14 * scale;
+          }
+          y += 10 * scale;
+        } else if (b.k === 'p' || b.k === 'q') {
+          ctx.font = `${b.k === 'q' ? 'italic ' : ''}400 ${12.5 * scale}px ${EXPORT_FONT_STACK}`;
+          if (b.k === 'q') ctx.fillStyle = theme.muted;
+          const text = b.sents.join(' ');
+          for (const line of wrapCanvasLine(ctx, text, maxW)) {
+            if (y > maxY) break;
+            ctx.fillText(line, x, y);
+            y += 18 * scale;
+          }
+          ctx.fillStyle = theme.ink;
+          y += 8 * scale;
+        } else if (b.k === 'hr') {
+          ctx.strokeStyle = theme.rule || '#ccc';
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + maxW, y);
+          ctx.stroke();
+          y += 14 * scale;
+        } else if (b.k === 'img') {
+          ctx.font = `400 ${11 * scale}px ${EXPORT_FONT_STACK}`;
+          ctx.fillStyle = theme.muted;
+          ctx.fillText(b.t, x, y);
+          ctx.fillStyle = theme.ink;
+          y += 18 * scale;
+        }
       }
-      if (cur && y <= (PAGE_H - 40) * scale) {
-        ctx.fillText(cur, 50 * scale, y);
-        y += 26 * scale;
+    } else {
+      // fallback plain lines
+      ctx.font = `400 ${13 * scale}px ${EXPORT_FONT_STACK}`;
+      for (const line of blockText(doc, pageIndex)) {
+        for (const wl of wrapCanvasLine(ctx, line, maxW)) {
+          if (y > maxY) break;
+          ctx.fillText(wl, x, y);
+          y += 20 * scale;
+        }
+        y += 4 * scale;
       }
-      if (y > (PAGE_H - 40) * scale) break;
+    }
+
+    // Overlay live PDF/canvas page content if available (after text for hybrid pages)
+    if (live && live.width > 0 && liveBody?.getAttribute('data-page-kind') === 'pdf') {
+      /* already handled above */
     }
   }
 
   drawInk(ctx, ann, scale, curve);
 
   ctx.fillStyle = theme.muted;
-  ctx.font = `${11 * scale}px "Gowun Batang", serif`;
+  ctx.font = `400 ${11 * scale}px ${EXPORT_FONT_STACK}`;
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
   ctx.fillText(`— ${pageIndex + 1} —`, (PAGE_W / 2) * scale, (PAGE_H - 20) * scale);
   ctx.textAlign = 'start';
 
@@ -351,7 +467,11 @@ export async function exportAnnotatedPdf(
   theme: ThemeTokens,
   opts: ExportOptions = {},
 ): Promise<Blob> {
-  const vector = opts.vector !== false && doc.fmt !== 'PDF';
+  // jsPDF built-in fonts are Latin-only → Hangul/CJK becomes garbage in vector mode.
+  // Use canvas rasterization whenever the document needs Unicode fonts (MD, HTML, DOCX, …).
+  const unicode = documentNeedsUnicodeFont(doc);
+  const vector =
+    opts.vector !== false && doc.fmt !== 'PDF' && !unicode;
   const curve = opts.pressureCurve || 'ink';
   const encryption =
     opts.userPassword && opts.userPassword.length > 0
@@ -368,12 +488,19 @@ export async function exportAnnotatedPdf(
     encryption,
   });
 
+  console.info('[onjeom export] PDF', {
+    fmt: doc.fmt,
+    pages: doc.pages.length,
+    vector,
+    unicode,
+  });
+
   for (let i = 0; i < doc.pages.length; i++) {
     if (i > 0) pdf.addPage([PAGE_W, PAGE_H], 'portrait');
     const ann = docAnn.pages[i] || emptyPage();
 
     if (vector) {
-      // paper background
+      // paper background — Latin-only documents
       const [pr, pg, pb] = hexToRgb(theme.paper);
       pdf.setFillColor(pr, pg, pb);
       pdf.rect(0, 0, PAGE_W, PAGE_H, 'F');
@@ -383,8 +510,9 @@ export async function exportAnnotatedPdf(
       pdf.setFontSize(9);
       pdf.text(`— ${i + 1} —`, PAGE_W / 2, PAGE_H - 20, { align: 'center' });
     } else {
+      // Raster page (Unicode-safe): MD/HTML/DOCX/EPUB/PPTX with CJK etc.
       const canvas = await renderPageCanvas(doc, i, ann, theme, curve, 2);
-      const data = canvas.toDataURL('image/jpeg', 0.92);
+      const data = canvas.toDataURL('image/jpeg', 0.93);
       pdf.addImage(data, 'JPEG', 0, 0, PAGE_W, PAGE_H);
     }
   }

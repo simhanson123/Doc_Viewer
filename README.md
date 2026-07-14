@@ -11,10 +11,10 @@ Read **Markdown, HTML, PDF, EPUB, DOCX, PPTX, and plain text** (ASCII, UTF-8, an
 
 Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-> **Use v0.4.7 or newer.**  
+> **Use v0.4.8 or newer.**  
 > - Formats: MD · TXT · HTML · PDF · DOCX · PPTX · EPUB  
-> - Encrypted PDF open + password export  
-> - Release gate: typecheck + loaders + **format experiments** + build + smoke + Playwright E2E
+> - MD/HTML/DOCX → PDF export keeps Hangul/CJK (canvas, not broken Helvetica)  
+> - Contents (TOC) jumps to page/heading; library remove without deleting files
 
 ---
 
@@ -53,7 +53,7 @@ Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md`.
 
 ### Download
 
-[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.7+**
+[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.8+**
 
 ### Build
 

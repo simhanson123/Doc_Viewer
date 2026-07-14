@@ -29,6 +29,11 @@ const en: Messages = {
   pwdNeed: 'This PDF requires a password.',
   pwdIncorrect: 'Incorrect password. Try again.',
   toastPdfProtected: 'Password-protected PDF saved',
+  removeFromLibrary: 'Remove from library',
+  removeFromLibraryHint: 'Remove from library only (source file is kept)',
+  removeFromLibraryConfirm:
+    'Remove this document from the library?\n\nThe original file on disk will NOT be deleted.',
+  toastRemovedFromLib: 'Removed from library (file kept on disk)',
   exportJson: 'Annotations JSON',
   importJson: 'Import JSON',
   autoSaveLocal: 'Annotations auto-saved on this device',
