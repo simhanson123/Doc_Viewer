@@ -1,15 +1,22 @@
-# Onjeom — Gebruikershandleiding (Nederlands)
+# Onjeom — User guide (Nederlands)
 
-## Document openen
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-Knop Openen, Ctrl+O of bestanden slepen. Formaten: .md .txt .pdf .epub .docx.
+## Open
 
-## Lezen en annoteren
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-Modi enkel/spread/scroll/reflow. Tools: pen, markeerstift, vormen, notities.
+## Encodings
 
-## Exporteren
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-Geannoteerde PDF (Ctrl+E), PNG, JSON.
+## Troubleshooting
 
-← [README](./README.md) · [BUILD](./BUILD.md)
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
+
+← [Overview](./README.md) · [Build](./BUILD.md)

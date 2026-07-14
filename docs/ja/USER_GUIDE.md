@@ -1,34 +1,22 @@
-# オン点 — ユーザーガイド（日本語）
+# Onjeom — User guide (日本語)
 
-## 文書を開く
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-- **開く** または `Ctrl+O`
-- ウィンドウへのドラッグ＆ドロップ
-- 対応: `.md` `.txt` `.pdf` `.epub` `.docx`
+## Open
 
-## 読書
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-単ページ / 見開き / スクロール / リフロー、ズーム、`←` `→` でページ移動、`B` でしおり。
+## Encodings
 
-**リフロー**は長文向き、**単ページ／見開き**は手書き向きです。
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-## 注釈ツール
+## Troubleshooting
 
-選択 · テキストハイライト · 蛍光ペン · ペン（筆圧）· 直線 · 消しゴム · 図形 · 付箋 · レーザー · 元に戻す/やり直し。
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
 
-設定で筆圧カーブやテーマを変更できます。
-
-## 書き出し
-
-注釈付き PDF（`Ctrl+E`）· PNG · 注釈 JSON。デスクトップでは同期フォルダに `.onjeom.json` を保存可能。
-
-## ショートカット
-
-| キー | 操作 |
-|------|------|
-| `Ctrl+O` | 開く |
-| `Ctrl+E` | PDF 書き出し |
-| `Ctrl+,` | 設定 |
-| `B` | しおり |
-
-← [概要](./README.md) · [ビルド](./BUILD.md)
+← [Overview](./README.md) · [Build](./BUILD.md)

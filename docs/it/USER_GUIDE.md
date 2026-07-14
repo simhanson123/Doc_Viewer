@@ -1,15 +1,22 @@
-# Onjeom — Guida utente (Italiano)
+# Onjeom — User guide (Italiano)
 
-## Aprire un documento
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-Pulsante Apri, Ctrl+O o trascina i file. Formati: .md .txt .pdf .epub .docx.
+## Open
 
-## Lettura e annotazione
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-Modalità singola/doppia/scorrimento/reflow. Strumenti: penna, evidenziatore, forme, note. Per disegnare usare singola/doppia.
+## Encodings
 
-## Esportazione
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-PDF annotato (Ctrl+E), PNG, JSON annotazioni.
+## Troubleshooting
 
-← [README](./README.md) · [BUILD](./BUILD.md)
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
+
+← [Overview](./README.md) · [Build](./BUILD.md)

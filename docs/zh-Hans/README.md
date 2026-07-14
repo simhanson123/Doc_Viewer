@@ -1,38 +1,60 @@
-# 句点 (Onjeom) — 简体中文
+# Onjeom — 简体中文
 
-支持手写批注的多格式文档阅读器。  
-**许可证:** MIT · **仓库:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
+**v0.4.3** · Multi-format document viewer with freehand annotation.  
+**License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-- [使用指南](./USER_GUIDE.md)
-- [构建说明](./BUILD.md)
-- [其他语言](../README.md)
+- [User guide](./USER_GUIDE.md)
+- [Build](./BUILD.md)
+- [All languages](../README.md) · [English (canonical)](../en/README.md)
 
-## 简介
+## Formats & encodings (v0.4.3)
 
-| 项目 | 说明 |
-|------|------|
-| 格式 | MD · TXT · PDF · EPUB · DOCX |
-| 阅读 | 单页 · 双页 · 滚动 · 重排 |
-| 批注 | 钢笔（压感）· 荧光笔 · 图形 · 便签 等 |
-| 导出 | 带批注 PDF · PNG · JSON |
-| 平台 | **Windows**（主）· Linux · Android（进行中） |
+| Format | Extensions | Notes |
+|--------|------------|--------|
+| Markdown | `.md` `.markdown` | Headings, lists, code |
+| Plain text | `.txt` `.text` `.asc` `.ascii` `.log` `.csv` … | Encoding auto-detect |
+| PDF | `.pdf` | pdf.js canvas pages |
+| Word | `.docx` | OOXML via mammoth |
+| EPUB | `.epub` | Chapters paginated |
 
-## Windows 安装
+**Text encodings:** ASCII · UTF-8 (±BOM) · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · Windows-1251/1256 · …
 
-从 [Releases](https://github.com/simhanson123/Doc_Viewer/releases) 下载安装包或便携版，使用 **打开** / `Ctrl+O` 打开文档。
+Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual extensions.
 
-## 开发
+## Install (Windows)
+
+1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.3+**
+2. Installer or portable EXE
+3. **Open** / `Ctrl+O` — PDF, MD, TXT, ASC, DOCX, EPUB, …
+
+Library starts **empty** (no sample books).
+
+## Develop
 
 ```bash
 npm install
+npm run test:loaders
 npm run dev
 npm run electron:build:win
 ```
 
-## 界面语言
+## Why a document might not show
 
-**设置 → 语言** 可选 20 种界面语言。正文字体覆盖主要世界文字。
+| Format | Notes |
+|--------|--------|
+| PDF | Needs v0.4.3+ (`onjeom://` + pdf.js worker IPC) |
+| TXT / MD / ASC | Multi-encoding auto-detect (ASCII, UTF-8, CP949, Shift_JIS, GBK, …) |
+| DOCX | ZIP/OOXML + mammoth text extract |
+| EPUB | ZIP + chapter extract |
 
-## 许可证
+Diagnostics: **Help → Path diagnostics**, **View → Developer tools** (`[onjeom]` logs).
+
+Full detail: [en/USER_GUIDE](../en/USER_GUIDE.md) · [en/BUILD](../en/BUILD.md)
+
+## UI language
+
+**Settings → Language** — 20 locales including 简体中文.
+
+## License
 
 [MIT](../../LICENSE)

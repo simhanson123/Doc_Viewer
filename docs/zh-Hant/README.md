@@ -1,28 +1,60 @@
-# 句點 (Onjeom) — 繁體中文
+# Onjeom — 繁體中文
 
-支援手寫註記的多格式文件閱讀器。  
-**授權:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
+**v0.4.3** · Multi-format document viewer with freehand annotation.  
+**License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-- [使用指南](./USER_GUIDE.md)
-- [建置說明](./BUILD.md)
-- [All languages](../README.md)
+- [User guide](./USER_GUIDE.md)
+- [Build](./BUILD.md)
+- [All languages](../README.md) · [English (canonical)](../en/README.md)
 
-## Windows 安裝
+## Formats & encodings (v0.4.3)
 
-從 Releases 下載安裝檔或可攜版，以「開啟」或 Ctrl+O 開啟文件。
+| Format | Extensions | Notes |
+|--------|------------|--------|
+| Markdown | `.md` `.markdown` | Headings, lists, code |
+| Plain text | `.txt` `.text` `.asc` `.ascii` `.log` `.csv` … | Encoding auto-detect |
+| PDF | `.pdf` | pdf.js canvas pages |
+| Word | `.docx` | OOXML via mammoth |
+| EPUB | `.epub` | Chapters paginated |
 
-Supported formats: **MD · TXT · PDF · EPUB · DOCX**
+**Text encodings:** ASCII · UTF-8 (±BOM) · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · Windows-1251/1256 · …
 
-## 開發
+Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual extensions.
+
+## Install (Windows)
+
+1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.3+**
+2. Installer or portable EXE
+3. **Open** / `Ctrl+O` — PDF, MD, TXT, ASC, DOCX, EPUB, …
+
+Library starts **empty** (no sample books).
+
+## Develop
 
 ```bash
 npm install
+npm run test:loaders
 npm run dev
 npm run electron:build:win
 ```
 
-UI language: **設定 → 語言** (20 locales).
+## Why a document might not show
 
-## 授權
+| Format | Notes |
+|--------|--------|
+| PDF | Needs v0.4.3+ (`onjeom://` + pdf.js worker IPC) |
+| TXT / MD / ASC | Multi-encoding auto-detect (ASCII, UTF-8, CP949, Shift_JIS, GBK, …) |
+| DOCX | ZIP/OOXML + mammoth text extract |
+| EPUB | ZIP + chapter extract |
+
+Diagnostics: **Help → Path diagnostics**, **View → Developer tools** (`[onjeom]` logs).
+
+Full detail: [en/USER_GUIDE](../en/USER_GUIDE.md) · [en/BUILD](../en/BUILD.md)
+
+## UI language
+
+**Settings → Language** — 20 locales including 繁體中文.
+
+## License
 
 [MIT](../../LICENSE)

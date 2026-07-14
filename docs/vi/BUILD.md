@@ -1,23 +1,14 @@
 # Onjeom — Build (Tiếng Việt)
 
-## Windows
+**v0.4.3** · Full guide: [en/BUILD](../en/BUILD.md)
 
 ```bash
 npm install
+npm run test:loaders
 npm run electron:build:win
 ```
 
-Kết quả trong release/. Dev: npm run dev.
+Critical: production UI uses `onjeom://app/`, not raw `file://` asar.  
+Open-file IPC always sends base64(raw bytes).
 
-## Linux / Android
-
-Linux/Android: xem BUILD tiếng Anh.
-
-```bash
-npm run electron:build:linux
-npm run android:sync
-```
-
-Full technical detail: [English BUILD](../en/BUILD.md)
-
-← [README](./README.md)
+← [Overview](./README.md) · [User guide](./USER_GUIDE.md)

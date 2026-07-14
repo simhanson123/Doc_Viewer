@@ -1,15 +1,22 @@
-# ओंजेओम (Onjeom) — उपयोगकर्ता मार्गदर्शिका (हिन्दी)
+# Onjeom — User guide (हिन्दी)
 
-## दस्तावेज़ खोलना
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-खोलें बटन, Ctrl+O, या फ़ाइल खींचें। प्रारूप: .md .txt .pdf .epub .docx।
+## Open
 
-## पढ़ना और एनोटेशन
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-एकल/दो पृष्ठ/स्क्रॉल/रीफ़्लो। उपकरण: पेन, हाइलाइटर, आकार, नोट्स।
+## Encodings
 
-## निर्यात
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-एनोटेटेड PDF (Ctrl+E), PNG, JSON।
+## Troubleshooting
 
-← [README](./README.md) · [BUILD](./BUILD.md)
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
+
+← [Overview](./README.md) · [Build](./BUILD.md)

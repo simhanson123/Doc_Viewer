@@ -3,6 +3,7 @@
  */
 
 import { arrayBufferToBase64 } from '@/lib/binary';
+import { isTextExt, OPEN_ALL_DOCUMENT_EXTENSIONS } from '@/lib/textExts';
 
 export type PlatformKind = 'electron' | 'android' | 'web';
 
@@ -18,10 +19,6 @@ export type PickedFile = {
 function extOf(name: string) {
   const e = name.split('.').pop()?.toLowerCase() || '';
   return e === 'markdown' ? 'md' : e;
-}
-
-function isTextExt(ext: string) {
-  return new Set(['md', 'markdown', 'txt', 'html', 'htm']).has(ext);
 }
 
 export function detectPlatform(): PlatformKind {
@@ -82,8 +79,14 @@ async function pickViaInput(multiple: boolean): Promise<PickedFile[] | null> {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = multiple;
-    input.accept =
-      '.md,.markdown,.txt,.pdf,.epub,.docx,application/pdf,application/epub+zip,text/plain,text/markdown';
+    input.accept = [
+      ...OPEN_ALL_DOCUMENT_EXTENSIONS.map((e) => `.${e}`),
+      'application/pdf',
+      'application/epub+zip',
+      'text/plain',
+      'text/markdown',
+      'text/*',
+    ].join(',');
     input.style.position = 'fixed';
     input.style.left = '-9999px';
     document.body.appendChild(input);
@@ -106,24 +109,16 @@ async function pickViaInput(multiple: boolean): Promise<PickedFile[] | null> {
         const out: PickedFile[] = [];
         for (const file of Array.from(list)) {
           const ext = extOf(file.name);
-          if (isTextExt(ext)) {
-            out.push({
-              name: file.name,
-              ext,
-              data: await file.text(),
-              isText: true,
-              encoding: 'utf8',
-            });
-          } else {
-            const buf = await file.arrayBuffer();
-            out.push({
-              name: file.name,
-              ext,
-              data: arrayBufferToBase64(buf),
-              isText: false,
-              encoding: 'base64',
-            });
-          }
+          // Always read raw bytes → base64 so encoding detection works for
+          // ASCII / UTF-8 / EUC-KR / Shift_JIS / etc. (same path as Electron IPC)
+          const buf = await file.arrayBuffer();
+          out.push({
+            name: file.name,
+            ext,
+            data: arrayBufferToBase64(buf),
+            isText: isTextExt(ext),
+            encoding: 'base64',
+          });
         }
         finish(out);
       } catch (e) {

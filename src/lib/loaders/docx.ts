@@ -63,14 +63,42 @@ export async function loadDocx(
   data: ArrayBuffer,
   opts: { id: string; title: string; path?: string },
 ): Promise<DocumentModel> {
-  const result = await mammoth.convertToHtml({ arrayBuffer: data });
+  if (!data || data.byteLength < 30) {
+    throw new Error(`DOCX too small (${data?.byteLength ?? 0} bytes)`);
+  }
+  const head = new Uint8Array(data, 0, 2);
+  if (head[0] !== 0x50 || head[1] !== 0x4b) {
+    throw new Error('Not a valid DOCX (missing ZIP/OOXML header PK)');
+  }
+
+  let result: { value: string; messages: { type: string; message: string }[] };
+  try {
+    result = await mammoth.convertToHtml({ arrayBuffer: data });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`DOCX parse failed: ${msg}`);
+  }
+
   const blocks = htmlToBlocks(result.value);
+  if (!blocks.length) {
+    // Document may be empty or image-only
+    blocks.push({
+      k: 'meta',
+      t: '(No extractable text — empty or image-only DOCX)',
+    } as ContentBlock);
+  }
   const firstH = blocks.find((b) => b.k === 'h1');
+  console.info('[onjeom load] DOCX', {
+    title: opts.title,
+    bytes: data.byteLength,
+    blocks: blocks.length,
+    warnings: result.messages?.length ?? 0,
+  });
   return {
     id: opts.id,
     fmt: 'DOCX',
     title: firstH && firstH.k === 'h1' ? firstH.t : opts.title,
-    sub: opts.path || 'Word 문서',
+    sub: opts.path || `Word · ${blocks.length} blocks`,
     face: 'sans',
     path: opts.path,
     pages: paginate(blocks),

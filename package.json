@@ -1,6 +1,6 @@
 {
   "name": "onjeom",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Onjeom — multi-format document viewer with freehand annotation (Windows, Linux, Android)",
   "author": "Onjeom Contributors",
   "license": "MIT",
@@ -21,7 +21,9 @@
     "android:sync": "npm run build:android-web && npx cap sync android",
     "android:open": "npx cap open android",
     "android:run": "npm run android:sync && npx cap run android",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:loaders": "node scripts/test-loaders.mjs",
+    "docs:sync": "node scripts/sync-locale-docs.mjs"
   },
   "build": {
     "appId": "app.onjeom.viewer",
@@ -47,11 +49,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "${productName}-${version}-win-${arch}.${ext}"
@@ -60,15 +66,21 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "tar.gz",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Office",
@@ -93,7 +105,9 @@
     "@capacitor/share": "^7.0.2",
     "@capacitor/splash-screen": "^7.0.2",
     "@capacitor/status-bar": "^7.0.2",
+    "buffer": "^6.0.3",
     "html2canvas": "^1.4.1",
+    "iconv-lite": "^0.7.3",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "mammoth": "^1.9.0",

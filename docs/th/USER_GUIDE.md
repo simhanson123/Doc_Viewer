@@ -1,15 +1,22 @@
-# ออนจอม (Onjeom) — คู่มือผู้ใช้ (ไทย)
+# Onjeom — User guide (ไทย)
 
-## เปิดเอกสาร
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-ปุ่มเปิด, Ctrl+O หรือลากไฟล์ รองรับ .md .txt .pdf .epub .docx
+## Open
 
-## การอ่านและจด
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-โหมดหน้าเดียว/สองหน้า/เลื่อน/รีโฟลว์ เครื่องมือปากกา ไฮไลต์ รูปทรง โน้ต
+## Encodings
 
-## ส่งออก
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-PDF พร้อมจด (Ctrl+E), PNG, JSON
+## Troubleshooting
 
-← [README](./README.md) · [BUILD](./BUILD.md)
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
+
+← [Overview](./README.md) · [Build](./BUILD.md)

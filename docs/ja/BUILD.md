@@ -1,28 +1,14 @@
-# オン点 — ビルドガイド（日本語）
+# Onjeom — Build (日本語)
 
-## Windows
+**v0.4.3** · Full guide: [en/BUILD](../en/BUILD.md)
 
 ```bash
 npm install
+npm run test:loaders
 npm run electron:build:win
 ```
 
-成果物は `release/`。開発は `npm run dev`。
+Critical: production UI uses `onjeom://app/`, not raw `file://` asar.  
+Open-file IPC always sends base64(raw bytes).
 
-## Linux
-
-```bash
-npm run electron:build:linux            # Linux / CI 推奨
-npm run electron:build:linux-portable
-```
-
-## Android
-
-```bash
-npm run android:sync
-npm run android:open
-```
-
-JDK 17 と Android Studio が必要です。詳細は [English BUILD](../en/BUILD.md)。
-
-← [概要](./README.md)
+← [Overview](./README.md) · [User guide](./USER_GUIDE.md)

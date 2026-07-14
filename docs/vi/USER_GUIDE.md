@@ -1,15 +1,22 @@
-# Onjeom — Hướng dẫn sử dụng (Tiếng Việt)
+# Onjeom — User guide (Tiếng Việt)
 
-## Mở tài liệu
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-Nút Mở, Ctrl+O hoặc kéo thả. Định dạng: .md .txt .pdf .epub .docx.
+## Open
 
-## Đọc và chú thích
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-Chế độ một trang/hai trang/cuộn/chảy lại. Công cụ: bút, đánh dấu, hình, ghi chú.
+## Encodings
 
-## Xuất
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-PDF có chú thích (Ctrl+E), PNG, JSON.
+## Troubleshooting
 
-← [README](./README.md) · [BUILD](./BUILD.md)
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
+
+← [Overview](./README.md) · [Build](./BUILD.md)

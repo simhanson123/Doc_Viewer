@@ -397,16 +397,103 @@ export type OpenedDoc = {
   byteLength: number;
 };
 
+const TEXT_EXTS = new Set([
+  'md',
+  'markdown',
+  'txt',
+  'text',
+  'ascii',
+  'asc',
+  'log',
+  'csv',
+  'tsv',
+  'json',
+  'xml',
+  'html',
+  'htm',
+  'css',
+  'js',
+  'ts',
+  'tsx',
+  'jsx',
+  'mjs',
+  'cjs',
+  'py',
+  'rs',
+  'go',
+  'java',
+  'c',
+  'h',
+  'cpp',
+  'hpp',
+  'cs',
+  'rb',
+  'php',
+  'sh',
+  'bat',
+  'ps1',
+  'yml',
+  'yaml',
+  'toml',
+  'ini',
+  'cfg',
+  'conf',
+  'nfo',
+  'rst',
+  'adoc',
+  'tex',
+  'srt',
+  'vtt',
+]);
+
 const OPEN_FILTERS: Electron.FileFilter[] = [
   {
     name: 'Documents',
-    extensions: ['md', 'markdown', 'txt', 'pdf', 'epub', 'docx'],
+    extensions: [
+      'md',
+      'markdown',
+      'txt',
+      'text',
+      'ascii',
+      'asc',
+      'log',
+      'csv',
+      'pdf',
+      'epub',
+      'docx',
+      'json',
+      'xml',
+      'html',
+      'htm',
+    ],
   },
   { name: 'PDF', extensions: ['pdf'] },
   { name: 'Markdown', extensions: ['md', 'markdown'] },
   { name: 'EPUB', extensions: ['epub'] },
   { name: 'Word', extensions: ['docx'] },
-  { name: 'Text', extensions: ['txt'] },
+  {
+    name: 'Text / code',
+    extensions: [
+      'txt',
+      'text',
+      'ascii',
+      'asc',
+      'log',
+      'csv',
+      'tsv',
+      'json',
+      'xml',
+      'html',
+      'htm',
+      'ini',
+      'cfg',
+      'conf',
+      'yml',
+      'yaml',
+      'nfo',
+      'rst',
+    ],
+  },
   { name: 'All Files', extensions: ['*'] },
 ];
 
@@ -415,33 +502,26 @@ async function readDocument(filePath: string): Promise<OpenedDoc> {
   const ext = extRaw === 'markdown' ? 'md' : extRaw;
   const name = path.basename(filePath);
   const buffer = await fs.readFile(filePath);
-  const textExts = new Set(['md', 'markdown', 'txt', 'html', 'htm']);
-  const isText = textExts.has(extRaw) || textExts.has(ext);
+  const isText = TEXT_EXTS.has(extRaw) || TEXT_EXTS.has(ext);
 
+  // Always send raw bytes as base64 so the renderer can detect charset
+  // (ASCII / UTF-8 / UTF-16 / EUC-KR / Shift_JIS / GBK / …) for text,
+  // and preserve binary integrity for PDF / EPUB / DOCX.
   console.log('[onjeom] readDocument', {
     filePath,
     ext,
     bytes: buffer.byteLength,
     isText,
+    head:
+      ext === 'pdf'
+        ? buffer.subarray(0, 5).toString('utf8')
+        : buffer.subarray(0, Math.min(8, buffer.length)).toString('hex'),
   });
 
-  if (isText) {
-    return {
-      path: filePath,
-      name,
-      ext,
-      data: buffer.toString('utf8'),
-      isText: true,
-      encoding: 'utf8',
-      byteLength: buffer.byteLength,
-    };
-  }
-
-  // PDF magic check
   if (ext === 'pdf') {
     const head = buffer.subarray(0, 5).toString('utf8');
     if (!head.startsWith('%PDF')) {
-      console.warn('[onjeom] file has .pdf extension but no %PDF header', head);
+      console.warn('[onjeom] .pdf without %PDF header:', JSON.stringify(head));
     }
   }
 
@@ -450,7 +530,7 @@ async function readDocument(filePath: string): Promise<OpenedDoc> {
     name,
     ext,
     data: buffer.toString('base64'),
-    isText: false,
+    isText,
     encoding: 'base64',
     byteLength: buffer.byteLength,
   };

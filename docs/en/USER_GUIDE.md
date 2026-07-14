@@ -1,77 +1,80 @@
 # Onjeom — User guide (English)
 
+**v0.4.3**
+
 ## Open a document
 
-- Click **Open** (or `Ctrl+O`)
-- Or drag and drop files onto the window
-- Supported: `.md` `.markdown` `.txt` `.pdf` `.epub` `.docx`
+- **Open** / `Ctrl+O`
+- Drag & drop onto the window
+- Supported: `.md` `.markdown` `.txt` `.text` `.asc` `.ascii` `.log` `.csv` `.pdf` `.epub` `.docx` (plus many text/code types via **All files**)
 
-The library (sidebar) lists open documents. Use search, format filter, and folders.
+The library starts empty. There are **no built-in sample books**.
 
-## Reading
+### Text encodings (MD / TXT / ASC / LOG / …)
 
-| Control | Action |
-|---------|--------|
-| Single / Spread / Scroll / Reflow | Layout mode |
-| `−` / `%` / `+` | Zoom (click % for fit-width) |
-| `←` `→` | Previous / next page |
-| `Home` / `End` | First / last page |
-| `G` | Go to page number |
-| Ribbon / `B` | Bookmark current page |
-| Right panel / `T` | Contents, search, highlights, notes |
+Onjeom reads **raw file bytes** and detects encoding automatically:
 
-**Reflow** is best for continuous text (MD/EPUB/DOCX). Drawing tools work best in **Single** or **Spread**.
+| Encoding | Notes |
+|----------|--------|
+| ASCII | 7-bit English and symbols |
+| UTF-8 | Default for modern files; BOM supported |
+| UTF-16 LE/BE | Detected via BOM |
+| Windows-1252 / ISO-8859-1 | Western European |
+| EUC-KR / CP949 | Korean legacy |
+| Shift_JIS | Japanese legacy |
+| GBK / Big5 | Chinese simplified / traditional |
+| Windows-1251 / 1256 | Cyrillic / Arabic legacy |
 
-## Annotation tools (bottom dock)
+If a file still looks wrong, re-save it as UTF-8 in your editor and reopen.
 
-| Tool | Use |
-|------|-----|
-| Select | Text selection |
-| A (text highlight) | Click sentences to highlight |
-| Highlighter | Freehand highlight strokes |
-| Pen | Freehand ink (stylus pressure if enabled) |
-| Line | Straight line |
-| Eraser | Remove strokes / shapes |
-| Shapes | Rectangle, ellipse, arrow |
-| Sticky note | Click page to place a note |
-| Laser | Temporary pointer trail |
-| Undo / Redo | `Ctrl+Z` / `Ctrl+Shift+Z` |
+### Binary formats
 
-Pressure curves and pen options live under **Settings**.
+| Format | How it is shown |
+|--------|------------------|
+| **PDF** | Each page rendered to canvas (pdf.js). Images and text from the PDF appear as drawn. |
+| **DOCX** | Converted to paragraphs/headings (mammoth). |
+| **EPUB** | Chapters extracted and paginated. |
 
-## Export & sync
+## Reading modes
 
-- **Annotated PDF** — `Ctrl+E` or Export menu  
-- **Page PNG** — current page snapshot  
-- **Annotations JSON** — backup / restore marks  
-- **Sync folder** (desktop) — auto-write `.onjeom.json` files  
+| Mode | Best for |
+|------|----------|
+| Single | Annotation + PDF |
+| Spread | Two pages side by side |
+| Scroll | Continuous pages |
+| Reflow | Long MD/EPUB/DOCX reading (draw in Single/Spread) |
 
-Annotations also auto-save in browser/local storage on this device.
+## Annotation tools
 
-## Themes
+Select · text highlight · highlighter · pen (stylus pressure) · line · eraser · shapes · sticky note · laser · undo/redo.
 
-**Settings → Reading theme:** Cream, White, Dark, Sepia, Night.  
-Accent color, paper texture, and font scale are adjustable.
+## Export
 
-## Keyboard shortcuts
+- Annotated PDF (`Ctrl+E`)
+- Current page PNG
+- Annotations JSON import/export
+- Desktop: optional sync folder for `.onjeom.json`
+
+## Troubleshooting
+
+| Symptom | What to try |
+|---------|-------------|
+| PDF blank | Use **v0.4.3+**. View → Developer tools → look for `[onjeom pdf]`. Help → Path diagnostics. |
+| Garbled Korean/Japanese/Chinese text | Encoding is auto-detected; try re-saving as UTF-8. |
+| File won’t open | Check extension; use All files filter. Error toast shows details. |
+| Empty library | Normal — open a file with **Open**. |
+| TXT/MD looks empty | Confirm the file has content; empty files open as a placeholder. |
+
+## Keyboard
 
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl+O` | Open |
 | `Ctrl+E` | Export annotated PDF |
-| `Ctrl+P` | Print |
 | `Ctrl+,` | Settings |
-| `Ctrl+/` | Shortcuts help |
-| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |
-| `1`–`9` | Quick tool select |
+| `Ctrl+/` | Shortcuts |
+| `←` `→` | Pages |
 | `B` | Bookmark |
-| `F` | Focus library search |
-| `Esc` | Close modal / select tool |
-
-## Tips
-
-- PDF pages render with the original fonts; text docs use multi-script Noto fonts.  
-- For S-Pen / active stylus, enable **Stylus pressure** and pick a pressure curve.  
-- Prefer **Single/Spread** when heavily annotating; use **Reflow** for long reading.
+| `1`–`9` | Tools |
 
 ← [Overview](./README.md) · [Build](./BUILD.md)

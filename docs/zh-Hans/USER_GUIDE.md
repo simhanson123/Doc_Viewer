@@ -1,20 +1,22 @@
-# 句点 — 使用指南（简体中文）
+# Onjeom — User guide (简体中文)
 
-## 打开文档
+**v0.4.3** · Canonical English: [en/USER_GUIDE](../en/USER_GUIDE.md)
 
-- **打开** 或 `Ctrl+O`
-- 拖放到窗口
-- 支持：`.md` `.txt` `.pdf` `.epub` `.docx`
+## Open
 
-## 阅读与批注
+- **Open** / `Ctrl+O` / drag-and-drop  
+- `.md` `.txt` `.asc` `.log` `.csv` `.pdf` `.docx` `.epub` (+ **All files**)
 
-单页 / 双页 / 滚动 / 重排；缩放与翻页；`B` 书签。  
-底部工具栏：选择、文本高亮、荧光笔、钢笔、直线、橡皮、图形、便签、激光、撤销/重做。
+## Encodings
 
-**重排**适合长文阅读；**单页/双页**适合书写。
+ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-## 导出
+## Troubleshooting
 
-带批注 PDF（`Ctrl+E`）、PNG、批注 JSON；桌面版可设置同步文件夹。
+| Issue | Fix |
+|-------|-----|
+| Blank PDF | Use **v0.4.3+** |
+| Garbled text | Re-save as UTF-8 |
+| Empty library | Normal — open a file |
 
-← [概述](./README.md) · [构建](./BUILD.md)
+← [Overview](./README.md) · [Build](./BUILD.md)

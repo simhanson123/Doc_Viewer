@@ -5,19 +5,21 @@
 [![Release](https://img.shields.io/github/v/release/simhanson123/Doc_Viewer)](https://github.com/simhanson123/Doc_Viewer/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-Read **Markdown, PDF, EPUB, DOCX, and plain text** — then annotate with pen, stylus pressure, highlighter, shapes, sticky notes, and bookmarks.
+Read **Markdown, PDF, EPUB, DOCX, and plain text** (ASCII, UTF-8, and many legacy encodings), then annotate with pen, stylus pressure, highlighter, shapes, and sticky notes.
 
 **Primary target:** Windows · also Linux & Android (in progress).
 
 Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
+> **Use v0.4.3 or newer.** Older 0.4.0–0.4.1 Windows builds had broken PDF rendering under `file://` + asar.
+
 ---
 
-## Documentation (by language)
+## Documentation (all languages)
 
-| Language | Guide |
-|----------|--------|
-| English | [docs/en](./docs/en/README.md) |
+| Language | Docs |
+|----------|------|
+| **English** | [docs/en](./docs/en/README.md) |
 | 한국어 | [docs/ko](./docs/ko/README.md) |
 | 日本語 | [docs/ja](./docs/ja/README.md) |
 | 简体中文 | [docs/zh-Hans](./docs/zh-Hans/README.md) |
@@ -38,7 +40,9 @@ Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123
 | Tiếng Việt | [docs/vi](./docs/vi/README.md) |
 | Bahasa Indonesia | [docs/id](./docs/id/README.md) |
 
-Full index: [docs/README.md](./docs/README.md)
+Index: [docs/README.md](./docs/README.md)
+
+Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md`.
 
 ---
 
@@ -46,58 +50,62 @@ Full index: [docs/README.md](./docs/README.md)
 
 ### Download
 
-Get the latest installer or portable build from  
-**[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases)**.
+[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.3+**
 
-### Build from source
+### Build
 
 ```bash
 npm install
+npm run test:loaders
 npm run electron:build:win
 ```
 
 | Output | Description |
 |--------|-------------|
 | `release/온점-*-win-x64.exe` | NSIS installer |
-| `release/온점-*-win-portable.exe` | Portable (no install) |
-| `release/win-unpacked/온점.exe` | Unpacked app |
+| `release/온점-*-win-portable.exe` | Portable |
+| `release/win-unpacked/온점.exe` | Unpacked |
 
-### Development
+### Develop
 
 ```bash
 npm run dev
 ```
 
-Open documents with **Open** / `Ctrl+O`, or drag & drop files.  
-Supported: `.md` `.txt` `.pdf` `.epub` `.docx`
+Open files with **Open** / `Ctrl+O` or drag-and-drop.  
+Formats: `.md` `.txt` `.pdf` `.epub` `.docx`
+
+### Text encodings
+
+ASCII · UTF-8 (± BOM) · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · Windows-1251/1256 · …
+
+### PDF / packaging notes
+
+Production app loads UI via **`onjeom://app/`** (not raw `file://` asar).  
+PDF worker: Blob URL from protocol fetch, with main-process base64 fallback.  
+See [docs/en/BUILD.md](./docs/en/BUILD.md).
 
 ---
 
-## Features (summary)
+## Features
 
-- **Formats:** MD · TXT · PDF · EPUB · DOCX  
-- **Reading:** single page · two-page spread · scroll · reflow  
-- **Themes:** cream · white · dark · sepia · night  
-- **Ink:** pen (stylus pressure curves) · highlighter · shapes · notes · laser · undo/redo  
-- **Export:** annotated PDF · PNG · annotations JSON  
-- **UI languages:** 20 locales (see in-app **Settings → Language**)  
-- **Reading fonts:** major world scripts (CJK, Arabic, Devanagari, Thai, Hebrew, Cyrillic, …)
+- Reading: single · spread · scroll · reflow  
+- Themes: cream · white · dark · sepia · night  
+- Annotation + undo/redo + local auto-save  
+- Export: annotated PDF · PNG · JSON  
+- **20 UI languages** (Settings → Language)  
+- World-script reading fonts  
+- **No sample documents** — empty library until you open a file  
 
 ---
 
 ## Other platforms
 
 ```bash
-# Linux (prefer Linux host or CI for AppImage/deb)
 npm run electron:build:linux
-npm run electron:build:linux-portable   # tar.gz
-
-# Android (JDK 17 + Android Studio)
-npm run android:sync
-npm run android:open
+npm run electron:build:linux-portable
+npm run android:sync && npm run android:open
 ```
-
-Details: [docs/en/BUILD.md](./docs/en/BUILD.md)
 
 ---
 

@@ -134,14 +134,35 @@ export function loadText(
   text: string,
   opts: { id: string; title: string; path?: string },
 ): DocumentModel {
-  const paras = text
+  // Normalize newlines
+  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // Prefer paragraph splits; if the file has no blank lines, split by single newlines
+  let paras = normalized
     .split(/\n\s*\n/)
     .map((p) => p.replace(/\n/g, ' ').trim())
     .filter(Boolean);
+
+  if (paras.length <= 1) {
+    paras = normalized
+      .split('\n')
+      .map((p) => p.trim())
+      .filter(Boolean);
+  }
+
+  // Still empty → single block with raw content
+  if (!paras.length) {
+    paras = [normalized.trim() || '(empty file)'];
+  }
+
   const blocks: ContentBlock[] = paras.map((para) => {
-    if (/^\d{4}/.test(para) || para.length < 40) return { k: 'meta', t: para };
+    // Short date-like lines as meta, otherwise body paragraphs
+    if (/^\d{4}([-/.\s]|$)/.test(para) && para.length < 48) {
+      return { k: 'meta', t: para };
+    }
     return { k: 'p', sents: splitSentences(para) };
   });
+
   return {
     id: opts.id,
     fmt: 'TXT',

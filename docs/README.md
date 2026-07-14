@@ -1,5 +1,7 @@
 # Onjeom documentation
 
+**App version: v0.4.3**
+
 Choose your language. Each folder has an overview, user guide, and build notes.
 
 | Code | Language | Folder |
@@ -38,4 +40,4 @@ The repository root [README.md](../README.md) is always in **English**.
 
 ## License
 
-MIT — see [LICENSE](../LICENSE).
+[MIT](../LICENSE)

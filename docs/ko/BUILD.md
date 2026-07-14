@@ -1,57 +1,38 @@
 # 온점 — 빌드 가이드 (한국어)
 
-현재 macOS / iOS 패키징은 범위에 넣지 않습니다.
+**v0.4.3** · macOS/iOS 패키징은 범위 밖입니다.
 
 ## 요구 사항
 
 | 대상 | 도구 |
 |------|------|
 | 공통 | Node.js 20+ |
-| Windows exe | Windows + npm |
-| Linux AppImage/deb | Linux 또는 GitHub Actions 권장 |
-| Android | JDK 17+, Android SDK, Android Studio |
+| Windows | Windows + npm |
+| Linux | Linux 호스트 또는 CI |
+| Android | JDK 17+, Android SDK |
 
 ## Windows
 
 ```bash
 npm install
+npm run test:loaders
 npm run electron:build:win
 ```
 
-결과: `release/` 아래 설치본·포터블·`win-unpacked`.
+결과물: `release/온점-<version>-win-x64.exe`, portable, `win-unpacked/`.
+
+### 프로덕션 경로 (중요)
+
+- UI: `onjeom://app/` (asar `file://` 금지)
+- 파일 열기: 항상 raw bytes → base64 IPC
+- 텍스트: 렌더러 인코딩 감지
+- PDF 워커: fetch Blob 또는 메인 IPC
+
+## 테스트
 
 ```bash
-npm run dev   # 개발
+npm run test:loaders
+npm run typecheck
 ```
 
-패키지 앱에서 파일 열기가 안 되면 **보기 → 개발자 도구** 콘솔을 확인하세요.  
-v0.3+ 는 `preload.cjs`, base64 IPC, PDF 워커 asar 언팩을 사용합니다.
-
-## Linux
-
-```bash
-npm run electron:build:linux            # Linux/CI
-npm run electron:build:linux-portable   # tar.gz (Windows에서도 가능)
-```
-
-Windows에서 AppImage 빌드는 실패할 수 있습니다.
-
-## Android
-
-```bash
-npm run build:android-web
-npx cap add android    # 최초 1회
-npm run android:sync
-npm run android:open
-```
-
-## 환경 변수 `ONJEOM_TARGET`
-
-`electron` | `web` | `android`
-
-## CI · 릴리스
-
-워크플로: `.github/workflows/build-desktop.yml`  
-릴리스 예시는 [영어 빌드 가이드](../en/BUILD.md)를 참고하세요.
-
-← [개요](./README.md) · [사용법](./USER_GUIDE.md)
+← [개요](./README.md) · [사용 설명서](./USER_GUIDE.md)

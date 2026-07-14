@@ -1,21 +1,14 @@
-# 句点 — 构建说明（简体中文）
+# Onjeom — Build (简体中文)
 
-## Windows
+**v0.4.3** · Full guide: [en/BUILD](../en/BUILD.md)
 
 ```bash
 npm install
+npm run test:loaders
 npm run electron:build:win
 ```
 
-输出在 `release/`。开发：`npm run dev`。
+Critical: production UI uses `onjeom://app/`, not raw `file://` asar.  
+Open-file IPC always sends base64(raw bytes).
 
-## Linux / Android
-
-见 [English BUILD](../en/BUILD.md)。
-
-```bash
-npm run electron:build:linux
-npm run android:sync && npm run android:open
-```
-
-← [概述](./README.md)
+← [Overview](./README.md) · [User guide](./USER_GUIDE.md)

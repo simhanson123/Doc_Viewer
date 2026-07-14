@@ -1,28 +1,60 @@
-# أونجوم (Onjeom) — العربية
+# Onjeom — العربية
 
-عارض مستندات متعدد الصيغ مع تعليقات بخط اليد.  
-**الترخيص:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
+**v0.4.3** · Multi-format document viewer with freehand annotation.  
+**License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-- [دليل المستخدم](./USER_GUIDE.md)
-- [البناء](./BUILD.md)
-- [All languages](../README.md)
+- [User guide](./USER_GUIDE.md)
+- [Build](./BUILD.md)
+- [All languages](../README.md) · [English (canonical)](../en/README.md)
 
-## تثبيت Windows
+## Formats & encodings (v0.4.3)
 
-حمّل المثبت أو النسخة المحمولة من Releases. افتح أو Ctrl+O.
+| Format | Extensions | Notes |
+|--------|------------|--------|
+| Markdown | `.md` `.markdown` | Headings, lists, code |
+| Plain text | `.txt` `.text` `.asc` `.ascii` `.log` `.csv` … | Encoding auto-detect |
+| PDF | `.pdf` | pdf.js canvas pages |
+| Word | `.docx` | OOXML via mammoth |
+| EPUB | `.epub` | Chapters paginated |
 
-Supported formats: **MD · TXT · PDF · EPUB · DOCX**
+**Text encodings:** ASCII · UTF-8 (±BOM) · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · Windows-1251/1256 · …
 
-## التطوير
+Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual extensions.
+
+## Install (Windows)
+
+1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.3+**
+2. Installer or portable EXE
+3. **Open** / `Ctrl+O` — PDF, MD, TXT, ASC, DOCX, EPUB, …
+
+Library starts **empty** (no sample books).
+
+## Develop
 
 ```bash
 npm install
+npm run test:loaders
 npm run dev
 npm run electron:build:win
 ```
 
-UI language: **الإعدادات → اللغة** (20 locales).
+## Why a document might not show
 
-## الترخيص
+| Format | Notes |
+|--------|--------|
+| PDF | Needs v0.4.3+ (`onjeom://` + pdf.js worker IPC) |
+| TXT / MD / ASC | Multi-encoding auto-detect (ASCII, UTF-8, CP949, Shift_JIS, GBK, …) |
+| DOCX | ZIP/OOXML + mammoth text extract |
+| EPUB | ZIP + chapter extract |
+
+Diagnostics: **Help → Path diagnostics**, **View → Developer tools** (`[onjeom]` logs).
+
+Full detail: [en/USER_GUIDE](../en/USER_GUIDE.md) · [en/BUILD](../en/BUILD.md)
+
+## UI language
+
+**Settings → Language** — 20 locales including العربية.
+
+## License
 
 [MIT](../../LICENSE)

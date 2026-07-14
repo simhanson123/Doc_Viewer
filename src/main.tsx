@@ -1,3 +1,7 @@
+import { Buffer } from 'buffer';
+// iconv-lite needs Buffer in the renderer
+(globalThis as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
@@ -9,8 +13,4 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Help OS/font stack pick glyphs for rare scripts when Noto subsets miss a char
-document.documentElement.style.setProperty(
-  'font-family',
-  "var(--font-ui)",
-);
+document.documentElement.style.setProperty('font-family', 'var(--font-ui)');

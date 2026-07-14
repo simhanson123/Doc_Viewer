@@ -1,101 +1,77 @@
 # Onjeom — Build guide (English)
 
-macOS / iOS packaging is out of scope for this project for now.
+**v0.4.3** · macOS/iOS packaging is out of scope.
 
 ## Requirements
 
 | Target | Tools |
 |--------|--------|
 | All | Node.js 20+ |
-| Windows exe | Windows + npm (electron-builder) |
-| Linux AppImage/deb | Linux host or GitHub Actions (recommended) |
-| Android APK/AAB | **JDK 17+**, Android SDK, Android Studio |
+| Windows | Windows + npm |
+| Linux AppImage/deb | Linux host or GitHub Actions |
+| Android | JDK 17+, Android SDK, Android Studio |
 
-## Windows desktop
+## Windows
 
 ```bash
 npm install
+npm run test:loaders
 npm run electron:build:win
 ```
 
-Output under `release/`:
-
-- NSIS installer: `온점-<version>-win-x64.exe`
-- Portable: `온점-<version>-win-portable.exe`
-- Unpacked: `win-unpacked/온점.exe`
-
-Development:
+Output: `release/온점-<version>-win-x64.exe`, portable, and `win-unpacked/`.
 
 ```bash
 npm run dev
 ```
 
-### File open (packaged app)
+### Production path architecture (critical)
 
-The production app uses:
+```
+Packaged layout
+  resources/app.asar/
+    dist/index.html
+    dist/assets/*          (also unpacked under app.asar.unpacked)
+    dist-electron/main.js
+    dist-electron/preload.cjs
 
-- Preload as **CommonJS** (`preload.cjs`)
-- Binary files over IPC as **base64**
-- PDF.js worker **unpacked from asar** (`asarUnpack`)
+Load URL (production):  onjeom://app/index.html
+Assets:                 onjeom://app/assets/...
+Protocol:               privileged (fetch + workers + CORS)
+Open file IPC:          always base64(raw bytes)
+Text decode:            renderer encoding detection (iconv-lite)
+PDF worker:             fetch → Blob URL, else IPC pdfWorkerBase64 from main
+```
 
-If open fails, use **View → Developer tools** and check the console.
+Do **not** load the UI via raw `file://…/app.asar/…` — workers break.
 
-## Linux
+### Diagnostics
 
-**AppImage / deb** need a Linux environment (or CI). Building AppImage on Windows often fails (`mksquashfs`).
+- Menu **Help → Path diagnostics…**
+- **View → Developer tools** — logs prefixed with `[onjeom]`
+
+## Tests
 
 ```bash
-# On Linux / ubuntu-latest
+npm run test:loaders   # ASCII/UTF-8/CP949/SJIS/GBK/PDF/DOCX/base64
+npm run typecheck
+```
+
+## Linux / Android
+
+```bash
 npm run electron:build:linux
-
-# Portable tarball (works from Windows too)
 npm run electron:build:linux-portable
+npm run android:sync && npm run android:open
 ```
-
-## Android
-
-```bash
-npm install
-npm run build:android-web
-npx cap add android          # first time only
-npm run android:sync
-npm run android:open         # Android Studio
-```
-
-Build APK/AAB in Android Studio, or:
-
-```bash
-cd android
-./gradlew assembleDebug
-```
-
-Annotations on Android save under app storage `onjeom-ann/`.
-
-## Environment variable `ONJEOM_TARGET`
-
-| Value | Meaning |
-|-------|---------|
-| `electron` (default) | Desktop with Electron plugin |
-| `web` | Static SPA |
-| `android` | Capacitor web assets (`base: './'`) |
-
-## CI
-
-See [`.github/workflows/build-desktop.yml`](../../.github/workflows/build-desktop.yml):
-
-- Windows → installer + portable  
-- Ubuntu → AppImage / deb / tar.gz  
-- Ubuntu → Android debug APK  
-
-Triggered by `workflow_dispatch` or tags `v*`.
 
 ## Releases
 
 ```bash
 npm run electron:build:win
-git tag -a vX.Y.Z -m "Onjeom vX.Y.Z"
+git tag -a vX.Y.Z -m "…"
 git push origin main --tags
-gh release create vX.Y.Z release/*-win* --title "Onjeom vX.Y.Z" --notes "..."
+gh release create vX.Y.Z release/*-win* --title "…" --notes "…"
 ```
 
 ← [Overview](./README.md) · [User guide](./USER_GUIDE.md)
