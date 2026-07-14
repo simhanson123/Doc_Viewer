@@ -1,0 +1,119 @@
+{
+  "name": "onjeom",
+  "version": "0.4.0",
+  "description": "온점 — Multi-format document viewer (Windows, Linux, Android)",
+  "author": "Onjeom Contributors",
+  "license": "MIT",
+  "main": "dist-electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env ONJEOM_TARGET=electron vite",
+    "dev:web": "cross-env ONJEOM_TARGET=web vite",
+    "build": "tsc -p tsconfig.json --noEmit && cross-env ONJEOM_TARGET=electron vite build",
+    "build:web": "tsc -p tsconfig.json --noEmit && cross-env ONJEOM_TARGET=web vite build",
+    "build:android-web": "tsc -p tsconfig.json --noEmit && cross-env ONJEOM_TARGET=android vite build",
+    "preview": "cross-env ONJEOM_TARGET=web vite preview",
+    "electron:build": "npm run build && electron-builder --win",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:linux": "npm run build && electron-builder --linux AppImage deb tar.gz",
+    "electron:build:linux-portable": "npm run build && electron-builder --linux tar.gz",
+    "android:add": "npm run build:android-web && npx cap add android",
+    "android:sync": "npm run build:android-web && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:run": "npm run android:sync && npx cap run android",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "build": {
+    "appId": "app.onjeom.viewer",
+    "productName": "온점",
+    "copyright": "Copyright © Onjeom Contributors",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json",
+      "!node_modules/**/*",
+      "!src/**/*",
+      "!android/**/*",
+      "!samples/**/*",
+      "!docs/**/*"
+    ],
+    "asarUnpack": [
+      "dist/assets/pdf.worker*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "${productName}-${version}-win-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "tar.gz",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Office",
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}",
+      "synopsis": "Multi-format document viewer with annotation",
+      "description": "온점 — MD, PDF, EPUB, DOCX viewer with freehand notes"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "온점"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-win-portable.${ext}"
+    }
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/app": "^7.0.2",
+    "@capacitor/cli": "^7.4.2",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/filesystem": "^7.1.4",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.9.0",
+    "marked": "^15.0.12",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^7.0.3",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-electron": "^0.28.8",
+    "vite-plugin-electron-renderer": "^0.14.6"
+  }
+}

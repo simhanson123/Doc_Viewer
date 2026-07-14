@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    * { box-sizing: border-box; }
+    ::selection { background: #F3D9A4; }
+    button { font-family: inherit; }
+    textarea { outline: none; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #CFC4A9; border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    @keyframes noteIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  </style>
+</helmet>
+<div style="height: 100vh; display: flex; flex-direction: column; background: #F2EBDA; font-family: 'Noto Sans KR', sans-serif; overflow: hidden;">
+
+  <div data-screen-label="상단 바" style="height: 54px; flex: none; background: #F7F1E3; border-bottom: 1px solid #E4DBC4; display: flex; align-items: center; gap: 10px; padding: 0 14px; user-select: none; position: relative; z-index: 8;">
+    <button title="서재 열기/닫기" onClick="{{ toggleSidebar }}" style="{{ topBtn }}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6 H20"></path><path d="M4 12 H20"></path><path d="M4 18 H13"></path></svg>
+    </button>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="{{ logoDotStyle }}"></div>
+      <div style="font-family: 'Gowun Batang', serif; font-weight: 700; font-size: 17px; color: #33291D;">온점</div>
+    </div>
+    <div style="width: 1px; height: 20px; background: #E0D5BC;"></div>
+    <span style="{{ fmtChipStyle }}">{{ fmt }}</span>
+    <div style="font-size: 13.5px; font-weight: 500; color: #4A4232; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 360px;">{{ docTitle }}</div>
+    <div style="flex: 1;"></div>
+    <div style="display: flex; background: #EDE5D0; border-radius: 10px; padding: 3px; gap: 2px;">
+      <button title="한 페이지씩" onClick="{{ setSingle }}" style="{{ modeSingleStyle }}">낱장</button>
+      <button title="두 페이지 펼침" onClick="{{ setSpread }}" style="{{ modeSpreadStyle }}">펼침</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 2px; background: #EDE5D0; border-radius: 10px; padding: 3px;">
+      <button title="축소" onClick="{{ zoomOut }}" style="{{ zoomBtn }}">−</button>
+      <div style="width: 44px; text-align: center; font-size: 12px; color: #6B5F49; font-weight: 500;">{{ zoomLabel }}</div>
+      <button title="확대" onClick="{{ zoomIn }}" style="{{ zoomBtn }}">+</button>
+    </div>
+    <button title="이 페이지에 책갈피" onClick="{{ toggleBookmark }}" style="{{ bmBtnStyle }}">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M6.5 3.5 H17.5 V20.5 L12 16.2 L6.5 20.5 Z" fill="{{ bmFill }}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path></svg>
+    </button>
+  </div>
+
+  <div style="flex: 1; display: flex; min-height: 0;">
+    <sc-if value="{{ sidebarOpen }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="사이드바" style="width: 264px; flex: none; background: #F4EEDF; border-right: 1px solid #E4DBC4; display: flex; flex-direction: column; min-height: 0; user-select: none;">
+        <div style="flex: 1; overflow-y: auto; padding: 16px 12px 24px;">
+          <div style="font-size: 11px; letter-spacing: 1.5px; font-weight: 700; color: #9A8D74; margin: 4px 8px 10px;">서재</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <sc-for list="{{ docItems }}" as="d" hint-placeholder-count="5">
+              <div onClick="{{ d.open }}" style="{{ d.style }}">
+                <div style="{{ d.iconStyle }}">{{ d.fmt }}</div>
+                <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                  <div style="{{ d.titleStyle }}">{{ d.title }}</div>
+                  <div style="font-size: 11px; color: #9A8D74;">{{ d.sub }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size: 11px; letter-spacing: 1.5px; font-weight: 700; color: #9A8D74; margin: 24px 8px 10px;">책갈피</div>
+          <sc-if value="{{ hasMarks }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <sc-for list="{{ markItems }}" as="m" hint-placeholder-count="2">
+                <div onClick="{{ m.go }}" style="display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 12.5px; color: #4A4232;">
+                  <div style="{{ m.dotStyle }}"></div>
+                  <div>{{ m.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noMarks }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size: 12px; color: #A99C82; padding: 2px 10px; line-height: 1.6;">아직 책갈피가 없습니다. 상단의 리본 버튼으로 추가해 보세요.</div>
+          </sc-if>
+        </div>
+        <div style="flex: none; border-top: 1px solid #E4DBC4; padding: 12px 18px; font-size: 11px; color: #A99C82; line-height: 1.6;">필기는 이 기기에 자동 저장됩니다</div>
+      </div>
+    </sc-if>
+
+    <div data-screen-label="읽기 화면" ref="{{ deskRef }}" style="flex: 1; position: relative; min-width: 0; background: #E8E0CE; overflow: hidden;">
+      <div style="{{ deskTintStyle }}"></div>
+
+      <div style="position: absolute; inset: 0; overflow: auto; display: flex; padding: 40px 44px 110px;">
+        <div style="margin: auto; display: flex; gap: 12px;">
+          <sc-for list="{{ pageSlots }}" as="pg" hint-placeholder-count="1">
+            <div data-screen-label="{{ pg.label }}" style="{{ pg.wrapStyle }}">
+              <div style="{{ pg.pageStyle }}">
+                <div style="{{ pg.contentStyle }}">
+                  <sc-for list="{{ pg.blocks }}" as="b" hint-placeholder-count="3">
+                    <sc-if value="{{ b.isText }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ b.style }}">{{ b.text }}</div>
+                    </sc-if>
+                    <sc-if value="{{ b.isPara }}" hint-placeholder-val="{{ true }}">
+                      <div style="{{ b.style }}"><sc-for list="{{ b.sents }}" as="s" hint-placeholder-count="2"><span onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.text }}</span></sc-for></div>
+                    </sc-if>
+                    <sc-if value="{{ b.isCode }}" hint-placeholder-val="{{ false }}">
+                      <pre style="{{ b.style }}">{{ b.text }}</pre>
+                    </sc-if>
+                    <sc-if value="{{ b.isImg }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ b.style }}"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 1px;">{{ b.text }}</span></div>
+                    </sc-if>
+                    <sc-if value="{{ b.isHr }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ b.style }}"></div>
+                    </sc-if>
+                  </sc-for>
+                </div>
+                <div style="{{ pg.numStyle }}">{{ pg.num }}</div>
+                <svg viewBox="0 0 560 744" style="position: absolute; left: 0; top: 0; width: 560px; height: 744px; pointer-events: none; z-index: 2; overflow: visible;">
+                  <sc-for list="{{ pg.ink }}" as="st" hint-placeholder-count="0">
+                    <path d="{{ st.d }}" fill="none" stroke="{{ st.c }}" stroke-width="{{ st.w }}" stroke-linecap="round" stroke-linejoin="round" style="{{ st.style }}"></path>
+                  </sc-for>
+                  <sc-if value="{{ pg.hasDraft }}" hint-placeholder-val="{{ false }}">
+                    <path d="{{ pg.dd }}" fill="none" stroke="{{ pg.dc }}" stroke-width="{{ pg.dw }}" stroke-linecap="round" stroke-linejoin="round" style="{{ pg.dstyle }}"></path>
+                  </sc-if>
+                </svg>
+                <div ref="{{ pg.ovRef }}" onPointerDown="{{ pg.down }}" onPointerMove="{{ pg.move }}" onPointerUp="{{ pg.up }}" style="{{ pg.ovStyle }}"></div>
+                <sc-for list="{{ pg.notes }}" as="n" hint-placeholder-count="0">
+                  <div style="{{ n.style }}">
+                    <div onPointerDown="{{ n.dragDown }}" onPointerMove="{{ n.dragMove }}" onPointerUp="{{ n.dragUp }}" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 2px 10px; cursor: grab; flex: none;">
+                      <div style="width: 26px; height: 4px; border-radius: 2px; background: rgba(90, 65, 10, 0.18);"></div>
+                      <button title="메모 삭제" onClick="{{ n.remove }}" onPointerDown="{{ n.stop }}" style="border: none; background: transparent; cursor: pointer; color: rgba(90, 65, 10, 0.45); font-size: 14px; line-height: 1; padding: 2px 4px;">×</button>
+                    </div>
+                    <textarea value="{{ n.text }}" onChange="{{ n.onText }}" onPointerDown="{{ n.stop }}" placeholder="메모를 입력하세요" style="flex: 1; border: none; background: transparent; resize: none; padding: 4px 12px 12px; font-family: 'Noto Sans KR', sans-serif; font-size: 12px; line-height: 1.65; color: #4A3F1E;"></textarea>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ pg.marked }}" hint-placeholder-val="{{ false }}">
+                  <div style="{{ pg.ribbonStyle }}"></div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <button title="이전 페이지" onClick="{{ prev }}" style="{{ prevStyle }}">‹</button>
+      <button title="다음 페이지" onClick="{{ next }}" style="{{ nextStyle }}">›</button>
+
+      <sc-if value="{{ showHlOpts }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ popStyle }}">
+          <sc-for list="{{ hlSwatches }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.pick }}" style="{{ c.style }}"></button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showPenOpts }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ popStyle }}">
+          <sc-for list="{{ penSwatches }}" as="c" hint-placeholder-count="4">
+            <button onClick="{{ c.pick }}" style="{{ c.style }}"></button>
+          </sc-for>
+          <div style="width: 1px; height: 20px; background: rgba(255, 255, 255, 0.16); margin: 0 4px;"></div>
+          <sc-for list="{{ widthBtns }}" as="w" hint-placeholder-count="3">
+            <button onClick="{{ w.pick }}" style="{{ w.style }}"><div style="{{ w.dot }}"></div></button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showShapeOpts }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ popStyle }}">
+          <button title="사각형" onClick="{{ pickRect }}" style="{{ sRectStyle }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="12" height="12" rx="1"></rect></svg></button>
+          <button title="원" onClick="{{ pickEllipse }}" style="{{ sEllipseStyle }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="6"></circle></svg></button>
+          <button title="화살표" onClick="{{ pickArrow }}" style="{{ sArrowStyle }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14 L14 4"></path><path d="M8 4 H14 V10"></path></svg></button>
+        </div>
+      </sc-if>
+
+      <div data-screen-label="필기 도구" style="position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 3px; padding: 8px 10px; background: #2B2620; border-radius: 16px; box-shadow: 0 12px 30px rgba(40, 30, 10, 0.35); z-index: 7; user-select: none;">
+        <button title="선택 (텍스트 드래그 가능)" onClick="{{ pickSelect }}" style="{{ tSelect }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3 L18 12.5 L11.8 13.4 L14.6 19.6 L11.9 20.8 L9.2 14.7 L6 17.5 Z"></path></svg></button>
+        <button title="텍스트 하이라이트 — 문장을 클릭" onClick="{{ pickTextHl }}" style="{{ tTextHl }}"><span style="{{ textHlIconStyle }}">가</span></button>
+        <button title="형광펜" onClick="{{ pickHl }}" style="{{ tHl }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M5 14 L13 6 L17 10 L9 18 H5 Z"></path><path d="M4 21 H20"></path></svg></button>
+        <button title="펜" onClick="{{ pickPen }}" style="{{ tPen }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M5 19 L6.5 14.5 L15.5 5.5 L18.5 8.5 L9.5 17.5 L5 19 Z"></path></svg></button>
+        <button title="지우개 — 획 위를 문지르세요" onClick="{{ pickEraser }}" style="{{ tEraser }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M7 16 L14 9 L18.5 13.5 L11.5 20.5 H9.5 L7 18 Z"></path><path d="M4 21 H20"></path></svg></button>
+        <button title="도형 그리기" onClick="{{ pickShape }}" style="{{ tShape }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="10" height="10" rx="1"></rect><circle cx="15.5" cy="15.5" r="4.5"></circle></svg></button>
+        <button title="스티키 노트 — 페이지를 클릭해 붙이기" onClick="{{ pickNote }}" style="{{ tNote }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M5 4 H19 V14 L13 20 H5 Z"></path><path d="M13 20 V14 H19"></path></svg></button>
+        <div style="width: 1px; height: 22px; background: rgba(255, 255, 255, 0.14); margin: 0 4px;"></div>
+        <button title="실행 취소 (Ctrl+Z)" onClick="{{ undoFn }}" style="{{ tUndo }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5 L3 10 L8 15"></path><path d="M3 10 H14 a5.5 5.5 0 0 1 0 11 H10"></path></svg></button>
+        <button title="다시 실행 (Ctrl+Shift+Z)" onClick="{{ redoFn }}" style="{{ tRedo }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5 L21 10 L16 15"></path><path d="M21 10 H10 a5.5 5.5 0 0 0 0 11 H14"></path></svg></button>
+      </div>
+
+      <div style="position: absolute; right: 18px; bottom: 30px; z-index: 6; font-size: 11.5px; color: #7C7057; background: rgba(251, 246, 233, 0.92); padding: 5px 11px; border-radius: 999px; border: 1px solid #E0D5BC; user-select: none;">{{ pageLabel }}</div>
+      <div style="position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: rgba(0, 0, 0, 0.08); z-index: 6;">
+        <div style="{{ progStyle }}"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;readingTheme&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;크림&quot;, &quot;화이트&quot;, &quot;다크&quot;], &quot;default&quot;: &quot;크림&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;읽기 화면&quot;}, &quot;accentColor&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;options&quot;: [&quot;#A65336&quot;, &quot;#3E5C76&quot;, &quot;#4E6B51&quot;, &quot;#8A5A83&quot;], &quot;default&quot;: &quot;#A65336&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;읽기 화면&quot;}, &quot;pageTexture&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;읽기 화면&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.pageEls = {};
+    this.noteDrag = null;
+    this._erasing = false;
+    this.DOCS = this.buildDocs();
+    this.state = {
+      docId: 'epub1', page: 0, mode: 'single', zoom: 1, tool: 'select',
+      hlColor: '#F6D24A', penColor: '#33291D', penW: 3, shapeKind: 'arrow',
+      sidebar: true, ann: {}, draft: null, hist: [], redo: [], deskW: 1200
+    };
+    this.deskRef = el => {
+      if (el && el !== this._desk) {
+        this._desk = el;
+        if (this._ro) this._ro.disconnect();
+        this._ro = new ResizeObserver(() => {
+          if (this._desk && this._desk.clientWidth !== this.state.deskW) this.setState({ deskW: this._desk.clientWidth });
+        });
+        this._ro.observe(el);
+        this.setState({ deskW: el.clientWidth });
+      }
+    };
+  }
+
+  buildDocs() {
+    const p = (...sents) => ({ k: 'p', sents });
+    const q = (...sents) => ({ k: 'q', sents });
+    const h1 = t => ({ k: 'h1', t });
+    const h2 = t => ({ k: 'h2', t });
+    const meta = t => ({ k: 'meta', t });
+    const code = t => ({ k: 'code', t });
+    const img = t => ({ k: 'img', t });
+    const hr = () => ({ k: 'hr' });
+    return [
+      { id: 'epub1', fmt: 'EPUB', title: '파도가 지나간 자리', sub: '한서린 장편소설', face: 'serif', pages: [
+        [ h1('파도가 지나간 자리'), meta('한서린 장편소설 · 제1장 방파제'),
+          p('새벽의 항구는 언제나 소금 냄새보다 기름 냄새가 먼저였다.', '지안은 방파제 끝에 앉아 아직 불이 꺼지지 않은 등대를 오래 바라보았다.', '바다는 어제의 일을 기억하지 못하는 얼굴로 뒤척였다.'),
+          p('할머니는 늘 말했다.', '파도가 지나간 자리에는 반드시 무언가 남는다고.', '그것이 미역 줄기든, 부서진 그물이든, 혹은 사람의 마음이든.', '지안은 그 말을 믿지 않으려 애썼지만 오늘만큼은 어쩐지 자신이 없었다.') ],
+        [ p('첫 배가 들어온 것은 여섯 시가 조금 넘어서였다.', '녹슨 뱃전에 부딪히는 물결 소리가 골목까지 올라와 늦잠 자는 창문들을 하나씩 두드렸다.', '어판장 시멘트 바닥 위로 상자들이 미끄러지고 목장갑 낀 손들이 바쁘게 오갔다.'),
+          p('그 소란의 한가운데에 낯선 남자가 서 있었다.', '도시의 것이 분명한 코트를 입고, 어울리지 않게 낡은 수첩을 들고 있었다.', '남자는 아무것도 사지 않았고 아무에게도 말을 걸지 않았다.', '다만 무언가를 계속 적었다.') ],
+        [ p('지안이 남자의 수첩을 처음 들여다본 것은 순전히 우연이었다.', '바람이 페이지를 넘겼고, 거기에는 놀랍게도 이 마을의 오래된 지명들이 빼곡했다.', '지금은 아무도 부르지 않는 이름들이었다.'),
+          q('기억은 지워지는 것이 아니라, 물때처럼 낮아졌다 높아지는 것이다.'),
+          p('"이걸 다 어디서 들으셨어요?"', '남자는 대답 대신 웃었는데, 그 웃음이 어딘가 낯익었다.') ],
+        [ p('저녁이 되자 안개가 밀려왔다.', '등대의 불빛이 안개 속에서 둥글게 번져 마을 전체가 하나의 흐린 사진 같아졌다.', '지안은 식당 문을 닫고도 한참을 카운터에 앉아 있었다.'),
+          p('남자가 남기고 간 수첩이 탁자 위에 놓여 있었다.', '펼쳐 볼 것인가, 돌려줄 것인가.', '그 사이의 짧은 거리에서 마음이 오래 서성였다.') ],
+        [ p('수첩의 첫 장에는 날짜도 이름도 없이 한 줄만 적혀 있었다.'),
+          q('돌아오는 길을 잊은 사람은 없다. 다만 늦을 뿐이다.'),
+          p('지안은 그 문장을 세 번 읽었다.', '세 번째에는 소리 내어 읽었고, 빈 식당 안에서 제 목소리가 낯설게 울렸다.', '창밖에서는 밤 파도가 방파제를 오래, 고르게 두드리고 있었다.') ],
+        [ p('다음 날 아침, 남자는 다시 어판장에 나타나지 않았다.', '대신 지안의 식당 앞에 흰 봉투 하나가 놓여 있었다.', '봉투 안에는 오래된 흑백 사진 한 장. 사진 속 방파제 끝에는 젊은 할머니가 서 있었다.'),
+          p('파도가 지나간 자리에는 반드시 무언가 남는다.', '지안은 이제 그 말을 믿기로 했다.'),
+          hr(), meta('제2장에서 계속') ],
+      ]},
+      { id: 'pdf1', fmt: 'PDF', title: '2026 독서 트렌드 리포트', sub: '리서치랩 온점', face: 'serif', pages: [
+        [ h1('2026 독서 트렌드 리포트'), meta('리서치랩 온점 · 2026년 6월 · 요약본'),
+          img('[ 표지 일러스트 — 이미지 자리 ]'),
+          p('본 리포트는 국내 성인 독자 2,400명을 대상으로 한 온라인 패널 조사와 심층 인터뷰 32건을 바탕으로 작성되었다.', '올해의 키워드는 "다시, 손으로 읽기"다.') ],
+        [ h2('1. 종이책의 조용한 귀환'),
+          p('전자책 이용률이 정체된 사이, 종이책 구매율은 2년 연속 소폭 상승했다.', '흥미로운 점은 상승분의 대부분이 20–30대에서 나왔다는 것이다.', '이들은 종이책을 "느리게 읽기 위한 도구"로 재발견하고 있다.'),
+          p('응답자의 61%는 "화면으로 읽을 때보다 종이로 읽을 때 더 오래 기억에 남는다"고 답했다.', '독서를 기록의 행위로 여기는 경향도 뚜렷해졌다.') ],
+        [ h2('2. 하이라이트는 두 번째 읽기다'),
+          p('디지털 독서에서 가장 많이 쓰이는 기능은 단연 하이라이트였다.', '독자들은 밑줄을 긋는 순간 이미 두 번째 읽기를 시작한다.', '하이라이트한 문장을 다시 찾아 읽는 비율은 주 1회 이상이 47%에 달했다.'),
+          img('[ 차트: 연령별 필기 도구 사용률 — 이미지 자리 ]') ],
+        [ h2('3. 필기하는 독자들'),
+          p('태블릿과 스타일러스의 보급은 "읽으며 쓰는" 독서를 일상으로 만들었다.', '여백에 메모를 남기는 독자는 그렇지 않은 독자보다 완독률이 1.8배 높았다.'),
+          q('밑줄은 책과 나눈 대화의 흔적이다. — 심층 인터뷰 참여자 J씨') ],
+        [ h2('4. 제언'),
+          p('뷰어와 리더 서비스는 이제 "잘 보여주는 것"을 넘어 "잘 남기게 하는 것"을 설계해야 한다.', '하이라이트, 메모, 책갈피가 흩어지지 않고 다시 독서로 이어지는 순환 구조가 핵심이다.'),
+          p('종이의 질감과 디지털의 편의가 만나는 지점에서, 다음 세대의 독서 경험이 시작될 것이다.'),
+          hr(), meta('© 2026 리서치랩 온점 · 무단 전재 금지') ],
+      ]},
+      { id: 'docx1', fmt: 'DOCX', title: '독서 모임 운영 제안서', sub: '김도윤 작성', face: 'sans', pages: [
+        [ h1('독서 모임 운영 제안서'), meta('작성: 김도윤 · 2026. 7. 2. · 내부 공유용'),
+          h2('배경'),
+          p('사내 도서 지원 제도의 이용률은 높지만, 읽은 책이 대화로 이어지는 경우는 드뭅니다.', '격주 1회, 점심시간을 활용한 소규모 독서 모임을 제안합니다.') ],
+        [ h2('운영 방식'),
+          p('한 시즌은 8주, 한 권의 책을 네 번에 나누어 읽습니다.', '모임 전날까지 각자 하이라이트한 세 문장을 공유 문서에 올립니다.', '모임에서는 그 문장들만으로 대화를 시작합니다.'),
+          h2('모임 규칙'),
+          p('완독은 의무가 아닙니다.', '다른 사람의 밑줄을 평가하지 않습니다.', '스포일러는 자유롭게 허용합니다.') ],
+        [ h2('예산'),
+          p('시즌당 도서 구입비 1인 2만 원, 최대 12인 기준 24만 원을 요청합니다.', '별도 공간 대여 없이 라운지를 사용합니다.'),
+          h2('기대 효과'),
+          p('부서 간 비공식 교류의 확대, 그리고 읽는 조직 문화의 정착입니다.', '작은 모임이지만 오래 가는 모임이 되도록 설계했습니다.'),
+          hr(), meta('첨부: 시즌 1 후보 도서 목록') ],
+      ]},
+      { id: 'md1', fmt: 'MD', title: 'reader-notes.md', sub: '개발 노트', face: 'sans', pages: [
+        [ h1('뷰어 개발 노트'), meta('reader-notes.md · 마지막 수정 2026-07-01'),
+          p('페이지 단위 렌더링과 필기 레이어를 분리하는 구조를 검토한다.', '본문 레이어 위에 잉크 레이어를 올리고, 좌표는 페이지 기준으로 정규화한다.'),
+          code('page/\n ├─ content    # 본문 (선택 가능)\n ├─ ink        # 형광펜 · 펜 (SVG)\n └─ notes      # 스티키 노트 (DOM)') ],
+        [ h2('렌더링 파이프라인'),
+          p('확대/축소는 페이지 전체에 스케일 변환을 적용하고, 포인터 좌표는 역변환해 저장한다.', '이렇게 하면 줌 레벨과 무관하게 필기가 같은 자리에 남는다.'),
+          code('const pt = {\n  x: (e.clientX - rect.left) / rect.width * PAGE_W,\n  y: (e.clientY - rect.top) / rect.height * PAGE_H,\n};') ],
+        [ h2('TODO'),
+          p('지우개의 히트 판정을 획 단위에서 점 단위로 세분화할지 결정할 것.', '펼침 보기에서 짝수 페이지 정렬 확인.', '내보내기: 필기 포함 PDF 렌더링 실험.'),
+          hr(), meta('EOF') ],
+      ]},
+      { id: 'txt1', fmt: 'TXT', title: '밑줄 일기.txt', sub: '개인 기록', face: 'serif', pages: [
+        [ meta('2026년 6월 12일 금요일'),
+          p('오늘은 버스에서 책을 스무 쪽쯤 읽었다.', '창밖 풍경이 좋아서 자꾸 고개를 들었는데, 그것도 독서의 일부라고 치기로 했다.'),
+          meta('2026년 6월 15일 월요일'),
+          p('좋은 문장을 만나면 멈추게 된다.', '멈춘 자리에 밑줄을 긋고 나면, 그 페이지는 이제 내 것 같다.') ],
+        [ meta('2026년 6월 21일 일요일'),
+          p('비 오는 날에는 종이 냄새가 더 진해진다.', '오래된 책일수록 그렇다.', '도서관 구석 자리에서 세 시간을 보냈다.'),
+          meta('2026년 6월 28일 일요일'),
+          p('다 읽은 책을 다시 펼쳐 밑줄만 골라 읽었다.', '한 권을 두 번 읽은 기분이다.') ],
+        [ meta('2026년 7월 3일 금요일'),
+          p('필기가 많아진 책은 무거워진 것 같은 착각이 든다.', '실제로는 잉크 몇 방울만큼도 무거워지지 않았을 텐데.', '생각의 무게라는 게 있다면 그럴지도.'),
+          hr(), meta('계속 쓰는 중') ],
+      ]},
+    ];
+  }
+
+  componentDidMount() {
+    const hook = () => {
+      const el = document.querySelector('[data-screen-label="읽기 화면"]');
+      if (!el) { setTimeout(hook, 300); return; }
+      this._desk = el;
+      const measure = () => {
+        const w = el.clientWidth;
+        if (w && w !== this.state.deskW) this.setState({ deskW: w });
+      };
+      this._ro = new ResizeObserver(measure);
+      this._ro.observe(el);
+      measure();
+    };
+    hook();
+    try {
+      const s = localStorage.getItem('onjeom-ann-v1');
+      if (s) this.setState({ ann: JSON.parse(s) });
+    } catch (e) {}
+    this.onKey = (e) => {
+      const tag = e.target && e.target.tagName;
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) this.redoAct(); else this.undoAct();
+        return;
+      }
+      if (e.key === 'ArrowRight') this.nav(1);
+      if (e.key === 'ArrowLeft') this.nav(-1);
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+
+  doc() { return this.DOCS.find(d => d.id === this.state.docId) || this.DOCS[0]; }
+  annFor(id) { return this.state.ann[id] || { pages: {}, hl: {}, marks: [] }; }
+  pAnn(a, p) { return a.pages[p] || { strokes: [], shapes: [], notes: [] }; }
+  ens(a, p) {
+    const pa = a.pages[p] || (a.pages[p] = {});
+    pa.strokes = pa.strokes || []; pa.shapes = pa.shapes || []; pa.notes = pa.notes || [];
+    return pa;
+  }
+  persist(ann) { try { localStorage.setItem('onjeom-ann-v1', JSON.stringify(ann)); } catch (e) {} }
+  pushHist() {
+    const id = this.state.docId;
+    const snap = JSON.parse(JSON.stringify(this.annFor(id)));
+    this.setState({ hist: this.state.hist.concat([{ id, snap }]).slice(-60), redo: [] });
+  }
+  mutate(fn) {
+    const id = this.state.docId;
+    const cur = JSON.parse(JSON.stringify(this.annFor(id)));
+    cur.pages = cur.pages || {}; cur.hl = cur.hl || {}; cur.marks = cur.marks || [];
+    fn(cur);
+    const ann = Object.assign({}, this.state.ann); ann[id] = cur;
+    this.setState({ ann }); this.persist(ann);
+  }
+  undoAct() {
+    const h = this.state.hist; if (!h.length) return;
+    const last = h[h.length - 1];
+    const back = { id: last.id, snap: JSON.parse(JSON.stringify(this.annFor(last.id))) };
+    const ann = Object.assign({}, this.state.ann); ann[last.id] = last.snap;
+    this.setState({ ann, hist: h.slice(0, -1), redo: this.state.redo.concat([back]) });
+    this.persist(ann);
+  }
+  redoAct() {
+    const r = this.state.redo; if (!r.length) return;
+    const last = r[r.length - 1];
+    const back = { id: last.id, snap: JSON.parse(JSON.stringify(this.annFor(last.id))) };
+    const ann = Object.assign({}, this.state.ann); ann[last.id] = last.snap;
+    this.setState({ ann, redo: r.slice(0, -1), hist: this.state.hist.concat([back]) });
+    this.persist(ann);
+  }
+  nav(dir) {
+    const d = this.doc();
+    const step = this.state.mode === 'spread' ? 2 : 1;
+    let p = this.state.page + dir * step;
+    p = Math.max(0, Math.min(d.pages.length - 1, p));
+    if (this.state.mode === 'spread') p -= p % 2;
+    this.setState({ page: p, draft: null });
+  }
+  getPt(e, p) {
+    const el = this.pageEls[p];
+    if (!el) return { x: 0, y: 0 };
+    const r = el.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / r.width * 560, y: (e.clientY - r.top) / r.height * 744 };
+  }
+  downOn(e, p) {
+    const t = this.state.tool;
+    if (t === 'select' || t === 'texthl') return;
+    const pt = this.getPt(e, p);
+    if (e.currentTarget.setPointerCapture) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {} }
+    if (t === 'pen' || t === 'hl') {
+      this.pushHist();
+      this.setState({ draft: { kind: 'stroke', p, tool: t, pts: [pt] } });
+    } else if (t === 'shape') {
+      this.pushHist();
+      this.setState({ draft: { kind: 'shape', p, shape: this.state.shapeKind, x0: pt.x, y0: pt.y, x1: pt.x, y1: pt.y } });
+    } else if (t === 'eraser') {
+      this.pushHist(); this._erasing = true; this.eraseAt(p, pt);
+    } else if (t === 'note') {
+      this.pushHist();
+      this.mutate(a => {
+        const pa = this.ens(a, p);
+        pa.notes.push({ id: 'n' + Date.now() + Math.floor(Math.random() * 10000), x: Math.max(4, Math.min(pt.x - 20, 560 - 178)), y: Math.max(4, Math.min(pt.y - 12, 744 - 160)), text: '' });
+      });
+      this.setState({ tool: 'select' });
+    }
+  }
+  moveOn(e, p) {
+    if (this._erasing && this.state.tool === 'eraser') { this.eraseAt(p, this.getPt(e, p)); return; }
+    const d = this.state.draft;
+    if (!d || d.p !== p) return;
+    const pt = this.getPt(e, p);
+    if (d.kind === 'stroke') this.setState({ draft: Object.assign({}, d, { pts: d.pts.concat([pt]) }) });
+    else this.setState({ draft: Object.assign({}, d, { x1: pt.x, y1: pt.y }) });
+  }
+  upOn(e, p) {
+    if (this._erasing) { this._erasing = false; return; }
+    const d = this.state.draft;
+    if (!d) return;
+    if (d.kind === 'stroke' && d.pts.length) {
+      const isHl = d.tool === 'hl';
+      const stroke = { tool: d.tool, c: isHl ? this.state.hlColor : this.state.penColor, w: isHl ? 16 : this.state.penW, pts: d.pts };
+      this.mutate(a => { this.ens(a, d.p).strokes.push(stroke); });
+    }
+    if (d.kind === 'shape') {
+      const dx = Math.abs(d.x1 - d.x0), dy = Math.abs(d.y1 - d.y0);
+      if (dx > 6 || dy > 6) {
+        const sh = { shape: d.shape, x0: d.x0, y0: d.y0, x1: d.x1, y1: d.y1, c: this.state.penColor };
+        this.mutate(a => { this.ens(a, d.p).shapes.push(sh); });
+      }
+    }
+    this.setState({ draft: null });
+  }
+  eraseAt(p, pt) {
+    this.mutate(a => {
+      const pa = this.ens(a, p);
+      pa.strokes = pa.strokes.filter(s => !s.pts.some(q => (q.x - pt.x) * (q.x - pt.x) + (q.y - pt.y) * (q.y - pt.y) < 324));
+      pa.shapes = pa.shapes.filter(s => !this.shapeHit(s, pt));
+    });
+  }
+  distSeg(px, py, x0, y0, x1, y1) {
+    const dx = x1 - x0, dy = y1 - y0;
+    const len2 = dx * dx + dy * dy;
+    let t = len2 ? ((px - x0) * dx + (py - y0) * dy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const qx = x0 + t * dx, qy = y0 + t * dy;
+    return Math.sqrt((px - qx) * (px - qx) + (py - qy) * (py - qy));
+  }
+  shapeHit(s, pt) {
+    if (s.shape === 'arrow') return this.distSeg(pt.x, pt.y, s.x0, s.y0, s.x1, s.y1) < 14;
+    const a = Math.min(s.x0, s.x1), b = Math.min(s.y0, s.y1), c = Math.max(s.x0, s.x1), d = Math.max(s.y0, s.y1);
+    const inOuter = pt.x > a - 12 && pt.x < c + 12 && pt.y > b - 12 && pt.y < d + 12;
+    const inInner = pt.x > a + 12 && pt.x < c - 12 && pt.y > b + 12 && pt.y < d - 12;
+    return inOuter && !inInner;
+  }
+  strokePath(pts) {
+    if (!pts.length) return '';
+    const r = v => Math.round(v * 10) / 10;
+    if (pts.length === 1) return 'M ' + r(pts[0].x) + ' ' + r(pts[0].y) + ' L ' + r(pts[0].x + 0.5) + ' ' + r(pts[0].y);
+    return 'M ' + r(pts[0].x) + ' ' + r(pts[0].y) + pts.slice(1).map(p => ' L ' + r(p.x) + ' ' + r(p.y)).join('');
+  }
+  shapePath(s) {
+    const r = v => Math.round(v * 10) / 10;
+    if (s.shape === 'rect') {
+      const a = Math.min(s.x0, s.x1), b = Math.min(s.y0, s.y1), c = Math.max(s.x0, s.x1), d = Math.max(s.y0, s.y1);
+      return 'M ' + r(a) + ' ' + r(b) + ' H ' + r(c) + ' V ' + r(d) + ' H ' + r(a) + ' Z';
+    }
+    if (s.shape === 'ellipse') {
+      const cx = (s.x0 + s.x1) / 2, cy = (s.y0 + s.y1) / 2;
+      const rx = Math.max(1, Math.abs(s.x1 - s.x0) / 2), ry = Math.max(1, Math.abs(s.y1 - s.y0) / 2);
+      return 'M ' + r(cx - rx) + ' ' + r(cy) + ' A ' + r(rx) + ' ' + r(ry) + ' 0 1 0 ' + r(cx + rx) + ' ' + r(cy) + ' A ' + r(rx) + ' ' + r(ry) + ' 0 1 0 ' + r(cx - rx) + ' ' + r(cy) + ' Z';
+    }
+    const ang = Math.atan2(s.y1 - s.y0, s.x1 - s.x0), L = 13;
+    const h1x = s.x1 - L * Math.cos(ang - 0.45), h1y = s.y1 - L * Math.sin(ang - 0.45);
+    const h2x = s.x1 - L * Math.cos(ang + 0.45), h2y = s.y1 - L * Math.sin(ang + 0.45);
+    return 'M ' + r(s.x0) + ' ' + r(s.y0) + ' L ' + r(s.x1) + ' ' + r(s.y1) + ' M ' + r(h1x) + ' ' + r(h1y) + ' L ' + r(s.x1) + ' ' + r(s.y1) + ' L ' + r(h2x) + ' ' + r(h2y);
+  }
+  toggleSent(id) {
+    this.pushHist();
+    const c = this.state.hlColor;
+    this.mutate(a => { if (a.hl[id]) delete a.hl[id]; else a.hl[id] = c; });
+  }
+
+  renderVals() {
+    const S = this.state;
+    const doc = this.doc();
+    const THEMES = {
+      '크림': { desk: '#E8E0CE', paper: '#FCF8ED', ink: '#332A1E', muted: '#8C7F69', rule: '#E4D9C2', codeBg: 'rgba(80, 60, 20, 0.06)', grain: 'rgba(120, 90, 40, 0.025)' },
+      '화이트': { desk: '#E9E8E4', paper: '#FFFFFF', ink: '#26241F', muted: '#8C8880', rule: '#ECEAE4', codeBg: 'rgba(40, 40, 40, 0.05)', grain: 'rgba(0, 0, 0, 0.015)' },
+      '다크': { desk: '#1B1915', paper: '#2A261E', ink: '#E9E1CD', muted: '#97907F', rule: '#3E392E', codeBg: 'rgba(255, 255, 255, 0.06)', grain: 'rgba(255, 255, 255, 0.02)' }
+    };
+    const theme = THEMES[this.props.readingTheme] || THEMES['크림'];
+    const accent = this.props.accentColor ?? '#A65336';
+    const texture = this.props.pageTexture ?? true;
+    const HL = ['#F6D24A', '#F5A05C', '#8FCF9B', '#87BBE8', '#EF9DBB'];
+    const PENS = ['#33291D', '#B0432E', '#2E5E9E', '#3E6B4F'];
+    const FMTC = { EPUB: '#A65336', PDF: '#B0432E', DOCX: '#2E5E9E', MD: '#3E6B4F', TXT: '#8C7F69' };
+    const ann = this.annFor(S.docId);
+    const len = doc.pages.length;
+    const drawTools = ['pen', 'hl', 'eraser', 'shape', 'note'];
+    const cursors = { pen: 'crosshair', hl: 'crosshair', eraser: 'cell', shape: 'crosshair', note: 'copy' };
+    const serifFace = "'Gowun Batang', serif";
+    const face = doc.face === 'sans' ? "'Noto Sans KR', sans-serif" : serifFace;
+    const headFace = doc.face === 'sans' ? "'Noto Sans KR', sans-serif" : serifFace;
+
+    const blockVals = (pi) => (doc.pages[pi] || []).map((b, bi) => {
+      const out = { isText: false, isPara: false, isCode: false, isImg: false, isHr: false };
+      if (b.k === 'h1') { out.isText = true; out.text = b.t; out.style = { fontFamily: headFace, fontSize: '27px', fontWeight: 700, color: theme.ink, lineHeight: 1.35, margin: '0 0 12px', letterSpacing: '-0.3px' }; }
+      else if (b.k === 'h2') { out.isText = true; out.text = b.t; out.style = { fontFamily: headFace, fontSize: '18px', fontWeight: 700, color: theme.ink, margin: '18px 0 10px' }; }
+      else if (b.k === 'meta') { out.isText = true; out.text = b.t; out.style = { fontFamily: "'Noto Sans KR', sans-serif", fontSize: '11px', letterSpacing: '1.4px', color: theme.muted, margin: '0 0 22px', fontWeight: 500 }; }
+      else if (b.k === 'code') { out.isCode = true; out.text = b.t; out.style = { fontFamily: "'IBM Plex Mono', monospace", fontSize: '11.5px', lineHeight: 1.7, color: theme.ink, background: theme.codeBg, padding: '14px 16px', borderRadius: '6px', whiteSpace: 'pre-wrap', margin: '0 0 16px', overflow: 'hidden' }; }
+      else if (b.k === 'img') { out.isImg = true; out.text = b.t; out.style = { height: '140px', borderRadius: '4px', background: 'repeating-linear-gradient(-45deg, ' + theme.codeBg + ' 0 8px, transparent 8px 16px)', border: '1px solid ' + theme.rule, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.muted, margin: '2px 0 18px' }; }
+      else if (b.k === 'hr') { out.isHr = true; out.style = { height: '1px', background: theme.rule, margin: '20px 0' }; }
+      else {
+        out.isPara = true;
+        const isQ = b.k === 'q';
+        out.style = isQ
+          ? { fontFamily: serifFace, fontSize: '15px', lineHeight: 1.9, color: theme.muted, margin: '18px 14px', textAlign: 'center' }
+          : { fontFamily: face, fontSize: doc.face === 'sans' ? '14px' : '15.5px', lineHeight: 1.95, color: theme.ink, textAlign: 'justify', margin: '0 0 15px', wordBreak: 'break-word' };
+        out.sents = b.sents.map((t, si) => {
+          const id = S.docId + '|' + pi + '|' + bi + '|' + si;
+          const hlc = ann.hl && ann.hl[id];
+          return {
+            text: (isQ && si === 0 ? '「' : '') + t + (isQ && si === b.sents.length - 1 ? '」' : '') + ' ',
+            onClick: S.tool === 'texthl' ? () => this.toggleSent(id) : undefined,
+            style: { background: hlc ? hlc + '66' : 'transparent', borderRadius: '2px', WebkitBoxDecorationBreak: 'clone', boxDecorationBreak: 'clone', cursor: S.tool === 'texthl' ? 'pointer' : 'inherit', transition: 'background 0.15s' }
+          };
+        });
+      }
+      return out;
+    });
+
+    const visible = S.mode === 'spread' ? [S.page, S.page + 1].filter(p => p < len) : [S.page];
+    const avail = Math.max(300, (S.deskW || 1200) - 44 * 2 - 12);
+    const rowW = visible.length > 1 ? 560 * 2 + 12 : 560;
+    const zCap = Math.max(0.4, avail / rowW);
+    const zoom = Math.min(S.zoom, zCap);
+    const pageSlots = visible.map(pi => {
+      const pa = this.pAnn(ann, pi);
+      const ink = (pa.strokes || []).map(st => ({
+        d: this.strokePath(st.pts), c: st.c, w: st.w,
+        style: { mixBlendMode: st.tool === 'hl' ? 'multiply' : 'normal', opacity: st.tool === 'hl' ? 0.5 : 1 }
+      })).concat((pa.shapes || []).map(sh => ({ d: this.shapePath(sh), c: sh.c, w: 2.2, style: { opacity: 0.95 } })));
+      const dr = S.draft && S.draft.p === pi ? S.draft : null;
+      const slot = {
+        label: (pi + 1) + '쪽', num: '— ' + (pi + 1) + ' —',
+        wrapStyle: { width: 560 * zoom + 'px', height: 744 * zoom + 'px', position: 'relative', flex: 'none' },
+        pageStyle: { position: 'absolute', left: 0, top: 0, width: '560px', height: '744px', transform: 'scale(' + zoom + ')', transformOrigin: '0 0', background: theme.paper, backgroundImage: texture ? 'repeating-linear-gradient(0deg, ' + theme.grain + ' 0 1px, transparent 1px 3px)' : 'none', boxShadow: '0 10px 30px rgba(60, 45, 20, 0.18), 0 2px 6px rgba(60, 45, 20, 0.12)', borderRadius: '2px' },
+        contentStyle: { position: 'absolute', inset: 0, padding: '50px 52px 58px', overflow: 'hidden', zIndex: 1 },
+        numStyle: { position: 'absolute', bottom: '18px', left: 0, right: 0, textAlign: 'center', fontSize: '10.5px', letterSpacing: '1px', color: theme.muted, fontFamily: serifFace, zIndex: 1 },
+        blocks: blockVals(pi),
+        ink,
+        hasDraft: !!dr,
+        marked: (ann.marks || []).indexOf(pi) >= 0,
+        ribbonStyle: { position: 'absolute', top: '-2px', right: '34px', width: '22px', height: '36px', background: accent, clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%)', zIndex: 5, filter: 'drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2))' },
+        ovRef: el => { this.pageEls[pi] = el; },
+        down: e => this.downOn(e, pi),
+        move: e => this.moveOn(e, pi),
+        up: e => this.upOn(e, pi),
+        ovStyle: { position: 'absolute', inset: 0, zIndex: 3, pointerEvents: drawTools.indexOf(S.tool) >= 0 ? 'auto' : 'none', cursor: cursors[S.tool] || 'default', touchAction: 'none' },
+        notes: (pa.notes || []).map(n => ({
+          text: n.text,
+          style: { position: 'absolute', left: n.x + 'px', top: n.y + 'px', width: '174px', height: '150px', background: '#FBE9A0', boxShadow: '0 8px 18px rgba(80, 60, 10, 0.28)', display: 'flex', flexDirection: 'column', borderRadius: '3px', zIndex: 4, animation: 'noteIn 0.18s ease' },
+          stop: e => e.stopPropagation(),
+          remove: e => { e.stopPropagation(); this.pushHist(); this.mutate(a => { const q = this.ens(a, pi); q.notes = q.notes.filter(x => x.id !== n.id); }); },
+          onText: e => { const v = e.target.value; this.mutate(a => { const x = this.ens(a, pi).notes.find(y => y.id === n.id); if (x) x.text = v; }); },
+          dragDown: e => {
+            e.stopPropagation();
+            if (e.currentTarget.setPointerCapture) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {} }
+            const pt = this.getPt(e, pi);
+            this.pushHist();
+            this.noteDrag = { p: pi, id: n.id, dx: pt.x - n.x, dy: pt.y - n.y };
+          },
+          dragMove: e => {
+            if (!this.noteDrag || this.noteDrag.id !== n.id) return;
+            const pt = this.getPt(e, pi);
+            const nx = Math.max(-60, Math.min(pt.x - this.noteDrag.dx, 560 - 100));
+            const ny = Math.max(-10, Math.min(pt.y - this.noteDrag.dy, 744 - 60));
+            this.mutate(a => { const x = this.ens(a, pi).notes.find(y => y.id === n.id); if (x) { x.x = nx; x.y = ny; } });
+          },
+          dragUp: e => { this.noteDrag = null; }
+        }))
+      };
+      if (dr) {
+        if (dr.kind === 'stroke') {
+          slot.dd = this.strokePath(dr.pts);
+          slot.dc = dr.tool === 'hl' ? S.hlColor : S.penColor;
+          slot.dw = dr.tool === 'hl' ? 16 : S.penW;
+          slot.dstyle = { mixBlendMode: dr.tool === 'hl' ? 'multiply' : 'normal', opacity: dr.tool === 'hl' ? 0.5 : 1 };
+        } else {
+          slot.dd = this.shapePath(dr);
+          slot.dc = S.penColor; slot.dw = 2.2; slot.dstyle = { opacity: 0.7 };
+        }
+      }
+      return slot;
+    });
+
+    const topBtn = { width: '34px', height: '34px', borderRadius: '9px', border: 'none', background: 'transparent', color: '#6B5F49', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
+    const segBtn = act => ({ border: 'none', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', background: act ? '#FFFCF2' : 'transparent', color: act ? '#33291D' : '#8C7F69', boxShadow: act ? '0 1px 3px rgba(60, 45, 20, 0.15)' : 'none' });
+    const btn = { width: '40px', height: '40px', borderRadius: '11px', border: 'none', background: 'transparent', color: '#CFC5AE', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' };
+    const tb = t => (S.tool === t ? Object.assign({}, btn, { background: accent, color: '#FFF6E8' }) : btn);
+    const marked = (ann.marks || []).indexOf(S.page) >= 0;
+    const swatch = (c, sel) => ({ width: '24px', height: '24px', borderRadius: '50%', background: c, border: sel ? '2px solid #FFF6E8' : '2px solid transparent', cursor: 'pointer', boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.18)', padding: 0 });
+    const shapeBtn = act => ({ width: '34px', height: '34px', borderRadius: '9px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: act ? accent : 'transparent', color: act ? '#FFF6E8' : '#CFC5AE' });
+    const navBtn = ok => ({ position: 'absolute', top: '50%', transform: 'translateY(-50%)', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid #E0D5BC', background: '#FBF6E9', color: '#5A4F3E', fontSize: '24px', lineHeight: 1, cursor: ok ? 'pointer' : 'default', opacity: ok ? 0.95 : 0.3, zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '3px', boxShadow: '0 4px 12px rgba(60, 45, 20, 0.15)' });
+    const canPrev = S.page > 0;
+    const canNext = S.page + (S.mode === 'spread' ? 2 : 1) < len;
+    const pct = len > 1 ? (S.page / (len - 1)) * 100 : 100;
+
+    return {
+      sidebarOpen: S.sidebar,
+      toggleSidebar: () => this.setState({ sidebar: !S.sidebar }),
+      logoDotStyle: { width: '9px', height: '9px', borderRadius: '50%', background: accent },
+      topBtn,
+      fmt: doc.fmt,
+      fmtChipStyle: { fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px', color: '#FFFDF6', background: FMTC[doc.fmt], padding: '3px 7px', borderRadius: '5px', flex: 'none' },
+      docTitle: doc.title,
+      setSingle: () => this.setState({ mode: 'single' }),
+      setSpread: () => this.setState({ mode: 'spread', page: S.page - (S.page % 2) }),
+      modeSingleStyle: segBtn(S.mode === 'single'),
+      modeSpreadStyle: segBtn(S.mode === 'spread'),
+      zoomBtn: { width: '26px', height: '26px', borderRadius: '7px', border: 'none', background: 'transparent', color: '#6B5F49', fontSize: '15px', cursor: 'pointer', lineHeight: 1 },
+      zoomOut: () => this.setState({ zoom: Math.max(0.6, Math.round((S.zoom - 0.1) * 10) / 10) }),
+      zoomIn: () => this.setState({ zoom: Math.min(1.8, Math.round((S.zoom + 0.1) * 10) / 10) }),
+      zoomLabel: Math.round(S.zoom * 100) + '%',
+      toggleBookmark: () => { this.pushHist(); const p = S.page; this.mutate(a => { const i = a.marks.indexOf(p); if (i >= 0) a.marks.splice(i, 1); else a.marks.push(p); }); },
+      bmBtnStyle: Object.assign({}, topBtn, { color: marked ? accent : '#6B5F49' }),
+      bmFill: marked ? accent : 'none',
+
+      docItems: this.DOCS.map(d => {
+        const act = d.id === S.docId;
+        return {
+          fmt: d.fmt, title: d.title, sub: d.pages.length + '쪽 · ' + d.sub,
+          open: () => this.setState({ docId: d.id, page: 0, draft: null, hist: [], redo: [] }),
+          style: { display: 'flex', gap: '10px', alignItems: 'center', padding: '9px 10px', borderRadius: '10px', cursor: 'pointer', background: act ? '#FFFCF0' : 'transparent', border: act ? '1px solid #E6DCC2' : '1px solid transparent', boxShadow: act ? '0 2px 6px rgba(60, 45, 20, 0.08)' : 'none' },
+          iconStyle: { width: '32px', height: '42px', borderRadius: '4px', background: '#FFFDF6', border: '1px solid #E4DBC4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8.5px', fontWeight: 700, color: FMTC[d.fmt], flex: 'none', letterSpacing: '0.3px' },
+          titleStyle: { fontSize: '13px', fontWeight: act ? 700 : 500, color: '#3A3226', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+        };
+      }),
+      hasMarks: (ann.marks || []).length > 0,
+      noMarks: (ann.marks || []).length === 0,
+      markItems: (ann.marks || []).slice().sort((a, b) => a - b).map(p => ({
+        label: (p + 1) + '쪽 · ' + doc.title,
+        go: () => this.setState({ page: S.mode === 'spread' ? p - (p % 2) : p }),
+        dotStyle: { width: '9px', height: '12px', background: accent, clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%)', flex: 'none' }
+      })),
+
+      deskTintStyle: { position: 'absolute', inset: 0, background: theme.desk },
+      pageSlots,
+      prev: () => canPrev && this.nav(-1),
+      next: () => canNext && this.nav(1),
+      prevStyle: Object.assign({ left: '16px' }, navBtn(canPrev)),
+      nextStyle: Object.assign({ right: '16px' }, navBtn(canNext)),
+      pageLabel: (S.mode === 'spread' ? (S.page + 1) + '–' + Math.min(S.page + 2, len) : (S.page + 1)) + ' / ' + len,
+      progStyle: { height: '100%', width: pct + '%', background: accent, transition: 'width 0.25s', opacity: 0.8 },
+
+      popStyle: { position: 'absolute', bottom: '82px', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#2B2620', borderRadius: '13px', boxShadow: '0 12px 30px rgba(40, 30, 10, 0.35)', zIndex: 7 },
+      showHlOpts: S.tool === 'hl' || S.tool === 'texthl',
+      showPenOpts: S.tool === 'pen',
+      showShapeOpts: S.tool === 'shape',
+      hlSwatches: HL.map(c => ({ pick: () => this.setState({ hlColor: c }), style: swatch(c, c === S.hlColor) })),
+      penSwatches: PENS.map(c => ({ pick: () => this.setState({ penColor: c }), style: swatch(c, c === S.penColor) })),
+      widthBtns: [1.8, 3, 5].map(w => ({
+        pick: () => this.setState({ penW: w }),
+        style: { width: '28px', height: '28px', borderRadius: '8px', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: S.penW === w ? 'rgba(255, 255, 255, 0.16)' : 'transparent', padding: 0 },
+        dot: { width: w * 2.4 + 'px', height: w * 2.4 + 'px', borderRadius: '50%', background: '#EDE3CC' }
+      })),
+      pickRect: () => this.setState({ shapeKind: 'rect' }),
+      pickEllipse: () => this.setState({ shapeKind: 'ellipse' }),
+      pickArrow: () => this.setState({ shapeKind: 'arrow' }),
+      sRectStyle: shapeBtn(S.shapeKind === 'rect'),
+      sEllipseStyle: shapeBtn(S.shapeKind === 'ellipse'),
+      sArrowStyle: shapeBtn(S.shapeKind === 'arrow'),
+
+      pickSelect: () => this.setState({ tool: 'select' }),
+      pickTextHl: () => this.setState({ tool: 'texthl' }),
+      pickHl: () => this.setState({ tool: 'hl' }),
+      pickPen: () => this.setState({ tool: 'pen' }),
+      pickEraser: () => this.setState({ tool: 'eraser' }),
+      pickShape: () => this.setState({ tool: 'shape' }),
+      pickNote: () => this.setState({ tool: 'note' }),
+      tSelect: tb('select'), tTextHl: tb('texthl'), tHl: tb('hl'), tPen: tb('pen'),
+      tEraser: tb('eraser'), tShape: tb('shape'), tNote: tb('note'),
+      textHlIconStyle: { fontFamily: serifFace, fontSize: '14px', fontWeight: 700, lineHeight: 1, paddingBottom: '2px', borderBottom: '4px solid ' + S.hlColor },
+      undoFn: () => this.undoAct(),
+      redoFn: () => this.redoAct(),
+      tUndo: Object.assign({}, btn, { opacity: S.hist.length ? 1 : 0.3 }),
+      tRedo: Object.assign({}, btn, { opacity: S.redo.length ? 1 : 0.3 })
+    };
+  }
+}
+</script>
+</body>
+</html>

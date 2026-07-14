@@ -1,0 +1,64 @@
+name: Build Desktop (Windows + Linux)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run electron:build:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onjeom-windows
+          path: release/*.{exe,blockmap,yml}
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run electron:build:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onjeom-linux
+          path: |
+            release/*.AppImage
+            release/*.deb
+            release/*.tar.gz
+            release/latest-linux.yml
+
+  android-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm run build:android-web
+      - run: npx cap sync android
+      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onjeom-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk

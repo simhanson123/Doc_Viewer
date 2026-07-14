@@ -1,0 +1,33 @@
+node_modules
+dist
+dist-electron
+release
+ios
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+*.local
+.env
+.env.*
+
+# Android / Capacitor generated & build
+android/.gradle
+android/build
+android/app/build
+android/captures
+android/local.properties
+android/app/src/main/assets/public
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/.idea
+*.apk
+*.aab
+*.jks
+*.keystore
+*.iml
+
+# Design prototype caches
+**/\.thumbnail
+.DS_Store
