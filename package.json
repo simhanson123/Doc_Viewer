@@ -2,7 +2,7 @@
   "name": "onjeom",
   "version": "0.4.10",
   "description": "Onjeom — multi-format document viewer with freehand annotation (Windows, Linux, Android)",
-  "author": "Onjeom Contributors",
+  "author": "Onjeom Contributors <simhanson123@gmail.com>",
   "license": "MIT",
   "main": "dist-electron/main.js",
   "type": "module",
@@ -13,10 +13,10 @@
     "build:web": "tsc -p tsconfig.json --noEmit && cross-env ONJEOM_TARGET=web vite build",
     "build:android-web": "tsc -p tsconfig.json --noEmit && cross-env ONJEOM_TARGET=android vite build",
     "preview": "cross-env ONJEOM_TARGET=web vite preview",
-    "electron:build": "npm run build && electron-builder --win",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:linux": "npm run build && electron-builder --linux AppImage deb tar.gz",
-    "electron:build:linux-portable": "npm run build && electron-builder --linux tar.gz",
+    "electron:build": "npm run build && electron-builder --win --publish never",
+    "electron:build:win": "npm run build && electron-builder --win --publish never",
+    "electron:build:linux": "npm run build && electron-builder --linux AppImage deb tar.gz --publish never",
+    "electron:build:linux-portable": "npm run build && electron-builder --linux tar.gz --publish never",
     "android:add": "npm run build:android-web && npx cap add android",
     "android:sync": "npm run build:android-web && npx cap sync android",
     "android:open": "npx cap open android",
@@ -35,6 +35,7 @@
     "appId": "app.onjeom.viewer",
     "productName": "온점",
     "copyright": "Copyright © Onjeom Contributors",
+    "publish": null,
     "directories": {
       "output": "release"
     },
@@ -66,7 +67,7 @@
           ]
         }
       ],
-      "artifactName": "${productName}-${version}-win-${arch}.${ext}"
+      "artifactName": "Onjeom-${version}-win-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -90,7 +91,8 @@
         }
       ],
       "category": "Office",
-      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
+      "maintainer": "Onjeom Contributors <simhanson123@gmail.com>",
+      "artifactName": "Onjeom-${version}-linux-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -99,7 +101,7 @@
       "shortcutName": "온점"
     },
     "portable": {
-      "artifactName": "${productName}-${version}-win-portable.${ext}"
+      "artifactName": "Onjeom-${version}-win-portable.${ext}"
     }
   },
   "dependencies": {
