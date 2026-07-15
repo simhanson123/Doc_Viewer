@@ -9,7 +9,7 @@
 import { writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const VERSION = '0.4.9';
+const VERSION = '0.4.10';
 const DOCS = join(process.cwd(), 'docs');
 
 const SKIP_DIRS = new Set(['screenshots', 'assets', 'images', 'img']);

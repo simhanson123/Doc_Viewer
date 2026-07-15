@@ -15,9 +15,9 @@ function xmlTextNodes(xml: string): string[] {
     const t = m[1]
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
       .replace(/&quot;/g, '"')
       .replace(/&apos;/g, "'")
+      .replace(/&amp;/g, '&') // must be last to avoid double-decoding
       .replace(/\s+/g, ' ')
       .trim();
     if (t) out.push(t);

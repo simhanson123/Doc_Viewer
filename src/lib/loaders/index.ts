@@ -29,6 +29,18 @@ function uid(prefix: string) {
 }
 
 /**
+ * Stable document id: files with a filesystem path get a deterministic id
+ * so saved annotations (localStorage / sync folder) re-attach on re-open.
+ * Path-less files (browser picker/drop) fall back to a session-unique id.
+ */
+function docIdFor(file: RawFile, ext: string): string {
+  // Forward slashes only — backslashes break CSS attribute selectors
+  // like `[data-page-root="<id>-<n>"]` used for scroll targeting.
+  if (file.path) return `doc:${file.path.replace(/\\/g, '/')}`;
+  return uid(ext || 'doc');
+}
+
+/**
  * Resolve text content with multi-encoding support.
  * - If encoding is base64 (raw file bytes): detect charset
  * - If already a JS string: use as-is (assumed UTF-8 from browser FileReader)
@@ -64,7 +76,7 @@ function resolveText(file: RawFile): { text: string; encoding: string } {
 export async function loadDocument(file: RawFile): Promise<DocumentModel> {
   const ext = (file.ext || '').toLowerCase().replace(/^\./, '');
   const base = {
-    id: uid(ext || 'doc'),
+    id: docIdFor(file, ext),
     title: file.name.replace(/\.[^.]+$/, '') || file.name,
     path: file.path,
   };

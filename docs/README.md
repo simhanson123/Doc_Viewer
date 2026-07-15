@@ -1,9 +1,9 @@
 # Onjeom documentation
 
-**App version: v0.4.9**
+**App version: v0.4.10**
 
 Canonical full docs: **[English](./en/README.md)** · **[한국어](./ko/README.md)**  
-Other languages include the same v0.4.9 feature set (overview + guide + build) with links back to EN/KO for detail.
+Other languages include the same v0.4.10 feature set (overview + guide + build) with links back to EN/KO for detail.
 
 | Code | Language | Folder |
 |------|----------|--------|
@@ -32,7 +32,7 @@ Other languages include the same v0.4.9 feature set (overview + guide + build) w
 
 ```
 docs/<lang>/
-  README.md       # Overview & quick start (v0.4.9 features)
+  README.md       # Overview & quick start (v0.4.10 features)
   USER_GUIDE.md   # How to use the app
   BUILD.md        # Build, package, QA gates (Playwright = QA only)
 ```

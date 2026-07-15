@@ -1,6 +1,6 @@
 # Onjeom — User guide (Français)
 
-**v0.4.9** · Full guides: [en/USER_GUIDE](../en/USER_GUIDE.md) · [ko/USER_GUIDE](../ko/USER_GUIDE.md)
+**v0.4.10** · Full guides: [en/USER_GUIDE](../en/USER_GUIDE.md) · [ko/USER_GUIDE](../ko/USER_GUIDE.md)
 
 ## Open
 
@@ -11,7 +11,7 @@
 
 ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · Big5 · …
 
-## Features (v0.4.9)
+## Features (v0.4.10)
 
 - **Encrypted PDF** open (password) · export PDF with optional open-password  
 - **TOC** jumps to page/heading  
@@ -24,10 +24,10 @@ ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · 
 
 | Issue | Fix |
 |-------|-----|
-| Blank PDF | Use **v0.4.9+** |
+| Blank PDF | Use **v0.4.10+** |
 | Encrypted PDF | Enter password when prompted |
 | Garbled text | Re-save as UTF-8 |
-| PDF export CJK garble | Use **v0.4.9+** |
+| PDF export CJK garble | Use **v0.4.10+** |
 | Empty library | Normal — open a file |
 | Remove from list | Does not delete disk file |
 

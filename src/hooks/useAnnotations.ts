@@ -119,30 +119,29 @@ export function useAnnotations(
     });
   }, []);
 
+  const histRef = useRef(hist);
+  histRef.current = hist;
+  const redoRef = useRef(redo);
+  redoRef.current = redo;
+
   const undo = useCallback(() => {
-    setHist((h) => {
-      if (!h.length) return h;
-      const last = h[h.length - 1];
-      setAnnStore((prev) => {
-        const back = clone(prev[last.id] || emptyAnn());
-        setRedo((r) => r.concat([{ id: last.id, snap: back }]));
-        return { ...prev, [last.id]: last.snap };
-      });
-      return h.slice(0, -1);
-    });
+    const h = histRef.current;
+    if (!h.length) return;
+    const last = h[h.length - 1];
+    const back = clone(storeRef.current[last.id] || emptyAnn());
+    setRedo((r) => r.concat([{ id: last.id, snap: back }]));
+    setAnnStore((prev) => ({ ...prev, [last.id]: last.snap }));
+    setHist(h.slice(0, -1));
   }, []);
 
   const redoAct = useCallback(() => {
-    setRedo((r) => {
-      if (!r.length) return r;
-      const last = r[r.length - 1];
-      setAnnStore((prev) => {
-        const back = clone(prev[last.id] || emptyAnn());
-        setHist((h) => h.concat([{ id: last.id, snap: back }]));
-        return { ...prev, [last.id]: last.snap };
-      });
-      return r.slice(0, -1);
-    });
+    const r = redoRef.current;
+    if (!r.length) return;
+    const last = r[r.length - 1];
+    const back = clone(storeRef.current[last.id] || emptyAnn());
+    setHist((h) => h.concat([{ id: last.id, snap: back }]));
+    setAnnStore((prev) => ({ ...prev, [last.id]: last.snap }));
+    setRedo(r.slice(0, -1));
   }, []);
 
   const resetHistory = useCallback(() => {
@@ -251,8 +250,9 @@ export function useAnnotations(
       mutate((a) => {
         a.pages[page] = { strokes: [], shapes: [], notes: [] };
         // remove sentence highlights on this page
+        // key format: `${docId}|${page}|${blockIndex}|${sentIndex}`
         for (const key of Object.keys(a.hl)) {
-          if (key.includes(`|${page}|`)) delete a.hl[key];
+          if (key.split('|')[1] === String(page)) delete a.hl[key];
         }
       });
     },

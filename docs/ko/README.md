@@ -2,7 +2,7 @@
 
 필기 가능한 멀티 포맷 문서 뷰어.  
 **라이선스:** MIT · **저장소:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)  
-**현재 버전:** v0.4.9
+**현재 버전:** v0.4.10
 
 - [사용 설명서](./USER_GUIDE.md)
 - [빌드 가이드](./BUILD.md)
@@ -43,7 +43,7 @@
 앱 테마: 크림 · 화이트 · 다크 · 세피아 · 나이트 (설정).  
 모음: [screenshots/](../screenshots/README.md)
 
-## 지원 포맷 (v0.4.9)
+## 지원 포맷 (v0.4.10)
 
 | 포맷 | 확장자 | 비고 |
 |------|--------|------|
@@ -61,11 +61,11 @@
 
 ## Windows 설치
 
-1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases)에서 **v0.4.9 이상** 받기  
+1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases)에서 **v0.4.10 이상** 받기  
 2. 설치본(`*-win-x64.exe`) 또는 포터블(`*-win-portable.exe`)  
 3. 실행 → **문서 열기** / `Ctrl+O` → MD·TXT·HTML·PDF·DOCX·PPTX·EPUB  
 
-> 0.4.0~0.4.1 은 PDF 경로 문제가 있었습니다. **v0.4.9+** 를 사용하세요.
+> 0.4.0~0.4.1 은 PDF 경로 문제가 있었습니다. **v0.4.10+** 를 사용하세요.
 
 ## 개발
 
@@ -84,7 +84,7 @@ npm run release:win
 
 ## 문서가 안 보일 때
 
-- **PDF**: 패키지 앱은 `onjeom://` 프로토콜 + PDF 워커 IPC 폴백 (v0.4.9+)  
+- **PDF**: 패키지 앱은 `onjeom://` 프로토콜 + PDF 워커 IPC 폴백 (v0.4.10+)  
 - **암호 PDF**: 비밀번호 입력 후 다시 열기  
 - **TXT/MD/ASC/HTML**: 바이트 기준 인코딩 자동 감지 (UTF-8, CP949, Shift_JIS, GBK 등)  
 - **DOCX / PPTX / EPUB**: ZIP(OOXML/EPUB) 검사 후 본문 추출  

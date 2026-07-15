@@ -1,8 +1,9 @@
 import { jsPDF } from 'jspdf';
 import type { DocAnn, DocumentModel, PageAnn, ThemeTokens } from '@/types';
 import { PAGE_H, PAGE_W } from '@/types';
-import { pressureStrokePath, shapePath } from '@/lib/geometry';
+import { pressureStrokePath } from '@/lib/geometry';
 import type { PressureCurve } from '@/lib/pressure';
+import { renderPdfPage } from '@/lib/loaders/pdf';
 
 function emptyPage(): PageAnn {
   return { strokes: [], shapes: [], notes: [] };
@@ -345,11 +346,27 @@ async function renderPageCanvas(
     `[data-page-export="${doc.id}-${pageIndex}"] .page-content`,
   ) as HTMLElement | null;
 
+  const page = doc.pages[pageIndex];
+  let pdfDrawn = false;
+
   if (live && live.width > 0 && liveBody?.getAttribute('data-page-kind') === 'pdf') {
     ctx.drawImage(live, 0, 0, canvas.width, canvas.height);
-  } else {
+    pdfDrawn = true;
+  } else if (page?.kind === 'pdf' && doc.raw && typeof doc.raw !== 'string') {
+    // Off-screen render: pages not currently mounted in the DOM
+    // (otherwise every non-visible PDF page exports blank)
+    try {
+      const tmp = document.createElement('canvas');
+      await renderPdfPage(doc.raw, page.pageIndex, tmp, doc.pdfPassword);
+      ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+      pdfDrawn = true;
+    } catch (e) {
+      console.warn('[onjeom export] offscreen PDF render failed, page', pageIndex + 1, e);
+    }
+  }
+
+  if (!pdfDrawn) {
     // Draw structured blocks with Unicode-capable fonts (fixes MD/HTML/DOCX Hangul garble)
-    const page = doc.pages[pageIndex];
     let y = 48 * scale;
     const x = 50 * scale;
     const maxW = (PAGE_W - 100) * scale;
@@ -432,11 +449,6 @@ async function renderPageCanvas(
         }
         y += 4 * scale;
       }
-    }
-
-    // Overlay live PDF/canvas page content if available (after text for hybrid pages)
-    if (live && live.width > 0 && liveBody?.getAttribute('data-page-kind') === 'pdf') {
-      /* already handled above */
     }
   }
 
@@ -565,6 +577,3 @@ export function downloadBlob(blob: Blob, filename: string) {
 export function downloadText(text: string, filename: string, mime = 'application/json') {
   downloadBlob(new Blob([text], { type: mime }), filename);
 }
-
-void shapePath;
-void pressureStrokePath;

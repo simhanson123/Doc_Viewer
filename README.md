@@ -11,7 +11,7 @@ Read **Markdown, HTML, PDF, EPUB, DOCX, PPTX, and plain text** (ASCII, UTF-8, an
 
 Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
-> **Current release: v0.4.9** — use **v0.4.9 or newer**.  
+> **Current release: v0.4.10** — use **v0.4.10 or newer**.  
 > - Formats: **MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB**  
 > - **Encrypted PDF** open (password) · export annotated PDF with optional open-password  
 > - MD/HTML/DOCX → PDF export keeps Hangul/CJK (canvas, not broken Helvetica)  
@@ -72,7 +72,7 @@ Full album: [docs/screenshots](docs/screenshots/README.md)
 
 Index: [docs/README.md](./docs/README.md)
 
-Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md` for **v0.4.9**.
+Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md` for **v0.4.10**.
 
 ---
 
@@ -80,7 +80,7 @@ Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md` for *
 
 ### Download
 
-[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.9+**
+[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.10+**
 
 ### Build
 
@@ -129,7 +129,7 @@ See [docs/en/BUILD.md](./docs/en/BUILD.md).
 
 ---
 
-## Features (v0.4.9)
+## Features (v0.4.10)
 
 - Reading: single · spread · scroll · reflow  
 - Themes: cream · white · dark · sepia · night  

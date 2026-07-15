@@ -46,9 +46,12 @@ function tokensToBlocks(tokens: Token[]): ContentBlock[] {
         break;
       case 'list': {
         const list = t as Tokens.List;
+        let n = typeof list.start === 'number' ? list.start : 1;
         for (const item of list.items) {
           const text = inlineText(item.tokens ?? []);
-          if (text) blocks.push({ k: 'p', sents: splitSentences((list.ordered ? '• ' : '• ') + text) });
+          const marker = list.ordered ? `${n}. ` : '• ';
+          if (text) blocks.push({ k: 'p', sents: splitSentences(marker + text) });
+          n++;
         }
         break;
       }

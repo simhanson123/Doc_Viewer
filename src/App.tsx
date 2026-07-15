@@ -199,6 +199,16 @@ function AppShell({
   const commitModels = useCallback(
     (models: DocumentModel[]) => {
       if (!models.length) return;
+      // Restore persisted per-document metadata (favorite / folder / tags)
+      const savedMeta = loadLibMeta();
+      for (const model of models) {
+        const m = savedMeta[model.id];
+        if (m) {
+          if (m.folder) model.folder = m.folder;
+          if (m.tags) model.tags = m.tags;
+          if (m.favorite !== undefined) model.favorite = m.favorite;
+        }
+      }
       setLibrary((lib) => {
         let next = lib.slice();
         for (const model of models) {
@@ -420,7 +430,7 @@ function AppShell({
     const name = `${doc.title.replace(/[\\/:*?"<>|]/g, '_')}-ann.json`;
     const result = await platformSaveText(text, name, 'application/json');
     if (result !== 'cancelled') showToast(t('toastJsonSaved'));
-  }, [doc, annApi.ann, showToast]);
+  }, [doc, annApi.ann, showToast, t]);
 
   const importJson = useCallback(async () => {
     try {
@@ -435,7 +445,7 @@ function AppShell({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'JSON 가져오기 실패');
     }
-  }, [annApi, doc?.id, showToast]);
+  }, [annApi, doc?.id, showToast, t]);
 
   const exportPng = useCallback(async () => {
     if (!doc) return;
@@ -459,7 +469,7 @@ function AppShell({
     } finally {
       setExporting(false);
     }
-  }, [doc, page, annApi.ann, theme, settings.pressureCurve, showToast]);
+  }, [doc, page, annApi.ann, theme, settings.pressureCurve, showToast, t]);
 
   const pickAnnFolder = useCallback(async () => {
     const folder = await platformPickFolder();

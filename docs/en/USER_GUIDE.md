@@ -1,6 +1,6 @@
 # Onjeom — User guide (English)
 
-**v0.4.9**
+**v0.4.10**
 
 ## Open a document
 
@@ -72,11 +72,11 @@ Select · text highlight · highlighter · pen (stylus pressure) · line · eras
 
 | Symptom | What to try |
 |---------|-------------|
-| PDF blank | Use **v0.4.9+**. View → Developer tools → `[onjeom pdf]`. Help → Path diagnostics. |
+| PDF blank | Use **v0.4.10+**. View → Developer tools → `[onjeom pdf]`. Help → Path diagnostics. |
 | Encrypted PDF won’t open | Enter the correct password when prompted. |
 | Garbled Korean/Japanese/Chinese text | Encoding is auto-detected; try re-saving as UTF-8. |
-| PDF export garble (Hangul/CJK) | Use **v0.4.9+** (canvas export path). |
-| TOC click does nothing | Ensure the document has headings/structure; try **v0.4.9+**. |
+| PDF export garble (Hangul/CJK) | Use **v0.4.10+** (canvas export path). |
+| TOC click does nothing | Ensure the document has headings/structure; try **v0.4.10+**. |
 | File won’t open | Check extension; use All files filter. Error toast shows details. |
 | Empty library | Normal — open a file with **Open**. |
 | Want file gone from list only | Use remove-from-library (disk file stays). |
