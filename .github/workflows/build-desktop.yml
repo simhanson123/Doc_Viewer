@@ -20,7 +20,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: onjeom-windows
-          path: release/*.{exe,blockmap,yml}
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/latest.yml
 
   linux:
     runs-on: ubuntu-latest
@@ -62,3 +65,20 @@ jobs:
         with:
           name: onjeom-android-debug
           path: android/app/build/outputs/apk/debug/*.apk
+
+  # Tag push (v*) → create/update the GitHub Release with all build outputs
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, linux, android-debug]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: release-assets
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/**
+          generate_release_notes: true
