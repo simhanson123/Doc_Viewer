@@ -9,10 +9,10 @@
 import { writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const VERSION = '0.4.10';
+const VERSION = '0.4.11';
 const DOCS = join(process.cwd(), 'docs');
 
-const SKIP_DIRS = new Set(['screenshots', 'assets', 'images', 'img']);
+const SKIP_DIRS = new Set(['screenshots', 'assets', 'images', 'img', 'badges']);
 const locales = readdirSync(DOCS, { withFileTypes: true })
   .filter((d) => d.isDirectory() && !SKIP_DIRS.has(d.name) && !d.name.startsWith('.'))
   .map((d) => d.name);

@@ -1,13 +1,13 @@
 # オン点 (Onjeom) — 日本語
 
-**v0.4.10** · Multi-format document viewer with freehand annotation.  
+**v0.4.11** · Multi-format document viewer with freehand annotation.  
 **License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
 
 - [User guide](./USER_GUIDE.md)
 - [Build](./BUILD.md)
 - [All languages](../README.md) · [English (canonical)](../en/README.md) · [한국어](../ko/README.md)
 
-## Highlights (v0.4.10)
+## Highlights (v0.4.11)
 
 - **Formats:** MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB  
 - **Encrypted PDF:** open with password; export annotated PDF **with** optional open-password  
@@ -17,7 +17,7 @@
 - **20 UI languages** · world-script body fonts  
 - Empty library at start (no sample books)
 
-## Formats & encodings (v0.4.10)
+## Formats & encodings (v0.4.11)
 
 | Format | Extensions | Notes |
 |--------|------------|--------|
@@ -35,7 +35,7 @@ Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual ex
 
 ## Install (Windows)
 
-1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.10+**
+1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.11+**
 2. Installer or portable EXE
 3. **Open** / `Ctrl+O` — MD, TXT, HTML, PDF, DOCX, PPTX, EPUB, …
 
@@ -67,11 +67,11 @@ npm run release:win
 
 | Format | Notes |
 |--------|--------|
-| PDF | Needs v0.4.10+ (`onjeom://` + pdf.js worker IPC) |
+| PDF | Needs v0.4.11+ (`onjeom://` + pdf.js worker IPC) |
 | Encrypted PDF | Password dialog |
 | TXT / MD / ASC / HTML | Multi-encoding auto-detect |
 | DOCX / PPTX / EPUB | ZIP + extract |
-| TOC / library remove / CJK PDF export | Use v0.4.10+ |
+| TOC / library remove / CJK PDF export | Use v0.4.11+ |
 
 Diagnostics: **Help → Path diagnostics**, **View → Developer tools** (`[onjeom]` logs).
 

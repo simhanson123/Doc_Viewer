@@ -2,7 +2,7 @@
 
 Multi-format document viewer with freehand annotation.  
 **License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)  
-**Current release:** v0.4.10
+**Current release:** v0.4.11
 
 - [User guide](./USER_GUIDE.md)
 - [Build guide](./BUILD.md)
@@ -43,7 +43,7 @@ Same document, **different desk/paper colors**. UI language differs per theme.
 App themes: Cream · White · Dark · Sepia · Night (Settings).  
 Album: [screenshots/](../screenshots/README.md)
 
-## Supported formats (v0.4.10)
+## Supported formats (v0.4.11)
 
 | Format | Extensions | Notes |
 |--------|------------|--------|
@@ -61,11 +61,11 @@ Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual ex
 
 ## Install (Windows)
 
-1. Open [Releases](https://github.com/simhanson123/Doc_Viewer/releases) (**v0.4.10+**).
+1. Open [Releases](https://github.com/simhanson123/Doc_Viewer/releases) (**v0.4.11+**).
 2. Download installer (`*-win-x64.exe`) or portable (`*-win-portable.exe`).
 3. Run → **Open** or `Ctrl+O` → MD / TXT / HTML / PDF / DOCX / PPTX / EPUB.
 
-> Prefer **v0.4.10 or newer**. Builds 0.4.0–0.4.1 had PDF path/worker issues; use current release.
+> Prefer **v0.4.11 or newer**. Builds 0.4.0–0.4.1 had PDF path/worker issues; use current release.
 
 ## Develop
 
