@@ -60,13 +60,16 @@ The right panel **Contents** list jumps to the matching page or heading (Markdow
 
 Select · text highlight · highlighter · pen (stylus pressure) · line · eraser · shapes · sticky note · laser · undo/redo.
 
-## Export
+## Export & annotation storage
+
+> **Fidelity:** Ink is **never** written into the original file. Annotations live in app/sidecar storage (and optional sync folder). **Export** builds a **new** PDF that merges ink; the source on disk is never modified or deleted.
 
 - Annotated PDF (`Ctrl+E`) — Hangul/CJK preserved for MD/HTML/DOCX source via canvas path
 - **Password-protected** annotated PDF (set open password)
 - Current page PNG
 - Annotations JSON import/export
 - Desktop: optional sync folder for `.onjeom.json`
+- Sidebar footer: **Saving…** / **Saved ✓** / **Save failed** + **Retry** when sync is configured
 
 ## Troubleshooting
 
@@ -81,6 +84,7 @@ Select · text highlight · highlighter · pen (stylus pressure) · line · eras
 | Empty library | Normal — open a file with **Open**. |
 | Want file gone from list only | Use remove-from-library (disk file stays). |
 | TXT/MD looks empty | Confirm the file has content; empty files open as a placeholder. |
+| Save failed in sidebar | Click **Retry**; check sync folder permissions. |
 
 ## Keyboard
 

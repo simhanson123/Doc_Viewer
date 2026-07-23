@@ -1,7 +1,7 @@
 # 온점 (Onjeom) — 한국어
 
 필기 가능한 멀티 포맷 문서 뷰어.  
-**라이선스:** MIT · **저장소:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)  
+**라이선스:** MIT · **저장소:** [simhanson123/Onjeom_Doc_Viewer](https://github.com/simhanson123/Onjeom_Doc_Viewer)  
 **현재 버전:** v0.4.11
 
 - [사용 설명서](./USER_GUIDE.md)
@@ -23,10 +23,13 @@
 - **포맷:** MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB  
 - **암호 PDF:** 비밀번호로 열기; 주석 PDF 내보내기 시 **열기 암호** 설정 가능  
 - **MD/HTML/DOCX → PDF 내보내기** 시 한글·CJK 유지 (캔버스 경로 — Helvetica 깨짐 없음)  
+- **필기는 원본 파일을 수정하지 않음** — 사이드카/기기 보관, 내보내기 시에만 **새 PDF** 로 병합  
+- **동기화 상태** 사이드바 푸터 (저장 중 / 저장됨 / 실패 + **재시도**)  
 - **목차(TOC)** 로 페이지/제목 이동  
 - **서재에서 제거** 는 앱 목록만 지움 — **원본 파일은 삭제하지 않음**  
 - **UI 20개 언어** · 세계 문자 본문 글꼴  
-- 시작 시 서재 비어 있음 (샘플 책 없음)
+- 시작 시 서재 비어 있음 (샘플 책 없음)  
+- **개발자 QA:** vitest 유닛 · GitHub Actions 테스트 + 커버리지 배지
 
 ## 스크린샷 — 읽기 테마 (색)
 
@@ -61,8 +64,8 @@
 
 ## Windows 설치
 
-1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases)에서 **v0.4.11 이상** 받기  
-2. 설치본(`*-win-x64.exe`) 또는 포터블(`*-win-portable.exe`)  
+1. [Releases](https://github.com/simhanson123/Onjeom_Doc_Viewer/releases)에서 **v0.4.11 이상** 받기  
+2. 설치본(`Onjeom-*-win-x64.exe`) 또는 포터블(`Onjeom-*-win-portable.exe`)  
 3. 실행 → **문서 열기** / `Ctrl+O` → MD·TXT·HTML·PDF·DOCX·PPTX·EPUB  
 
 > 0.4.0~0.4.1 은 PDF 경로 문제가 있었습니다. **v0.4.11+** 를 사용하세요.

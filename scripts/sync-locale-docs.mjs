@@ -10,6 +10,10 @@ import { writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const VERSION = '0.4.11';
+/** Canonical GitHub repo (not the local folder name Doc_Viewer). */
+const REPO = 'simhanson123/Onjeom_Doc_Viewer';
+const REPO_URL = `https://github.com/${REPO}`;
+const RELEASES_URL = `${REPO_URL}/releases`;
 const DOCS = join(process.cwd(), 'docs');
 
 const SKIP_DIRS = new Set(['screenshots', 'assets', 'images', 'img', 'badges']);
@@ -71,24 +75,30 @@ const FORMATS_TABLE_KO = `| 포맷 | 확장자 | 비고 |
 const HIGHLIGHTS_EN = `- **Formats:** MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB  
 - **Encrypted PDF:** open with password; export annotated PDF **with** optional open-password  
 - **Export PDF** from MD/HTML/DOCX keeps Hangul/CJK (canvas path — not broken Helvetica)  
+- **Annotations never rewrite the source file** — ink is sidecar/device storage; export merges into a **new** PDF only  
+- **Sync status** in the sidebar footer (saving / saved / failed + **Retry**)  
 - **Contents (TOC)** jumps to page/heading  
 - **Library remove** removes from the in-app list only — **never deletes** the original file on disk  
 - **20 UI languages** · world-script body fonts  
-- Empty library at start (no sample books)`;
+- Empty library at start (no sample books)  
+- **QA (developers):** vitest unit suite · GitHub Actions tests + coverage badge`;
 
 const HIGHLIGHTS_KO = `- **포맷:** MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB  
 - **암호 PDF:** 비밀번호로 열기; 주석 PDF 내보내기 시 **열기 암호** 설정 가능  
 - **MD/HTML/DOCX → PDF 내보내기** 시 한글·CJK 유지 (캔버스 경로 — Helvetica 깨짐 없음)  
+- **필기는 원본 파일을 수정하지 않음** — 사이드카/기기 보관, 내보내기 시에만 **새 PDF** 로 병합  
+- **동기화 상태** 사이드바 푸터 (저장 중 / 저장됨 / 실패 + **재시도**)  
 - **목차(TOC)** 로 페이지/제목 이동  
 - **서재에서 제거** 는 앱 목록만 지움 — **원본 파일은 삭제하지 않음**  
 - **UI 20개 언어** · 세계 문자 본문 글꼴  
-- 시작 시 서재 비어 있음 (샘플 책 없음)`;
+- 시작 시 서재 비어 있음 (샘플 책 없음)  
+- **개발자 QA:** vitest 유닛 · GitHub Actions 테스트 + 커버리지 배지`;
 
 function enReadme() {
   return `# Onjeom — English
 
 Multi-format document viewer with freehand annotation.  
-**License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)  
+**License:** MIT · **Repo:** [${REPO}](${REPO_URL})  
 **Current release:** v${VERSION}
 
 - [User guide](./USER_GUIDE.md)
@@ -130,8 +140,8 @@ ${FORMATS_TABLE_EN}
 
 ## Install (Windows)
 
-1. Open [Releases](https://github.com/simhanson123/Doc_Viewer/releases) (**v${VERSION}+**).
-2. Download installer (\`*-win-x64.exe\`) or portable (\`*-win-portable.exe\`).
+1. Open [Releases](${RELEASES_URL}) (**v${VERSION}+**).
+2. Download installer (\`Onjeom-*-win-x64.exe\`) or portable (\`Onjeom-*-win-portable.exe\`).
 3. Run → **Open** or \`Ctrl+O\` → MD / TXT / HTML / PDF / DOCX / PPTX / EPUB.
 
 > Prefer **v${VERSION} or newer**. Builds 0.4.0–0.4.1 had PDF path/worker issues; use current release.
@@ -236,13 +246,16 @@ The right panel **Contents** list jumps to the matching page or heading (Markdow
 
 Select · text highlight · highlighter · pen (stylus pressure) · line · eraser · shapes · sticky note · laser · undo/redo.
 
-## Export
+## Export & annotation storage
+
+> **Fidelity:** Ink is **never** written into the original file. Annotations live in app/sidecar storage (and optional sync folder). **Export** builds a **new** PDF that merges ink; the source on disk is never modified or deleted.
 
 - Annotated PDF (\`Ctrl+E\`) — Hangul/CJK preserved for MD/HTML/DOCX source via canvas path
 - **Password-protected** annotated PDF (set open password)
 - Current page PNG
 - Annotations JSON import/export
 - Desktop: optional sync folder for \`.onjeom.json\`
+- Sidebar footer: **Saving…** / **Saved ✓** / **Save failed** + **Retry** when sync is configured
 
 ## Troubleshooting
 
@@ -257,6 +270,7 @@ Select · text highlight · highlighter · pen (stylus pressure) · line · eras
 | Empty library | Normal — open a file with **Open**. |
 | Want file gone from list only | Use remove-from-library (disk file stays). |
 | TXT/MD looks empty | Confirm the file has content; empty files open as a placeholder. |
+| Save failed in sidebar | Click **Retry**; check sync folder permissions. |
 
 ## Keyboard
 
@@ -296,7 +310,13 @@ npm run test:loaders
 npm run electron:build:win
 \`\`\`
 
-Output: \`release/온점-<version>-win-x64.exe\`, portable, and \`win-unpacked/\`.
+Output (names from \`package.json\` \`artifactName\`):
+
+| Path | Description |
+|------|-------------|
+| \`release/Onjeom-<version>-win-x64.exe\` | NSIS installer |
+| \`release/Onjeom-<version>-win-portable.exe\` | Portable |
+| \`release/win-unpacked/온점.exe\` | Unpacked (product name **온점**) |
 
 \`\`\`bash
 npm run dev
@@ -335,6 +355,8 @@ These commands **check** the app. They are **not** features shipped inside the u
 | Command | Purpose |
 |---------|---------|
 | \`npm run typecheck\` | TypeScript |
+| \`npm run test:unit\` | **vitest** unit suite (\`src/lib/__tests__\`) |
+| \`npm run test:coverage\` | vitest + coverage report / badge input |
 | \`npm run test:loaders\` | Encoding / PDF header / DOCX / base64 offline |
 | \`npm run test:formats\` | Generate + exercise PDF/EPUB/DOCX/PPTX/HTML fixtures |
 | \`npm run smoke:packaged\` | Boot packaged EXE (blank-UI guard) |
@@ -343,6 +365,7 @@ These commands **check** the app. They are **not** features shipped inside the u
 
 \`\`\`bash
 npm run typecheck
+npm run test:unit
 npm run test:loaders
 npm run test:formats
 npm run smoke:packaged
@@ -351,7 +374,10 @@ npm run test:e2e
 npm run release:win
 \`\`\`
 
-> **Playwright** is a **QA tool** for developers/CI. End users do not need it and it is not an in-app feature.
+CI: \`.github/workflows/test.yml\` runs typecheck + loaders + coverage on every \`main\` push/PR.  
+Tag push \`v*\` → \`.github/workflows/build-desktop.yml\` builds Windows/Linux/Android and publishes a GitHub Release.
+
+> **Playwright / vitest** are **QA tools** for developers/CI. End users do not need them and they are not in-app features.
 
 ## Linux / Android
 
@@ -363,11 +389,14 @@ npm run android:sync && npm run android:open
 
 ## Releases
 
+Preferred: push tag \`vX.Y.Z\` so GitHub Actions attaches built artifacts.
+
 \`\`\`bash
 npm run release:win
 git tag -a vX.Y.Z -m "…"
-git push origin main --tags
-gh release create vX.Y.Z release/*-win* --title "…" --notes "…"
+git push origin main refs/tags/vX.Y.Z
+# or manual assets:
+gh release create vX.Y.Z release/Onjeom-*-win* --title "…" --notes "…"
 \`\`\`
 
 ## Docs sync & screenshots
@@ -395,7 +424,7 @@ function koReadme() {
   return `# 온점 (Onjeom) — 한국어
 
 필기 가능한 멀티 포맷 문서 뷰어.  
-**라이선스:** MIT · **저장소:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)  
+**라이선스:** MIT · **저장소:** [${REPO}](${REPO_URL})  
 **현재 버전:** v${VERSION}
 
 - [사용 설명서](./USER_GUIDE.md)
@@ -437,8 +466,8 @@ ${FORMATS_TABLE_KO}
 
 ## Windows 설치
 
-1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases)에서 **v${VERSION} 이상** 받기  
-2. 설치본(\`*-win-x64.exe\`) 또는 포터블(\`*-win-portable.exe\`)  
+1. [Releases](${RELEASES_URL})에서 **v${VERSION} 이상** 받기  
+2. 설치본(\`Onjeom-*-win-x64.exe\`) 또는 포터블(\`Onjeom-*-win-portable.exe\`)  
 3. 실행 → **문서 열기** / \`Ctrl+O\` → MD·TXT·HTML·PDF·DOCX·PPTX·EPUB  
 
 > 0.4.0~0.4.1 은 PDF 경로 문제가 있었습니다. **v${VERSION}+** 를 사용하세요.
@@ -525,13 +554,16 @@ function koUser() {
 필기는 **낱장·펼침**에서 하는 것이 좋습니다.  
 하단 도구: 선택, 문장 하이라이트, 형광펜, 펜, 직선, 지우개, 도형, 노트, 레이저, 실행 취소.
 
-## 내보내기
+## 내보내기 · 필기 저장
+
+> **신뢰:** 필기는 **원본 파일에 절대 기록되지 않습니다.** 앱/사이드카(및 선택 동기 폴더)에만 보관됩니다. **내보내기** 는 필기를 합친 **새 PDF** 를 만들 뿐이며, 디스크 원본은 수정·삭제하지 않습니다.
 
 - 주석 PDF (\`Ctrl+E\`) — MD/HTML/DOCX 출처 시 한글·CJK 유지 (캔버스)  
 - **열기 암호** 가 있는 주석 PDF  
 - 현재 쪽 PNG  
 - 주석 JSON 가져오기/내보내기  
-- 데스크톱: \`.onjeom.json\` 동기 폴더(선택)
+- 데스크톱: \`.onjeom.json\` 동기 폴더(선택)  
+- 사이드바 푸터: **저장 중…** / **저장됨 ✓** / **저장 실패** + **재시도**
 
 ## 문제 해결
 
@@ -545,6 +577,7 @@ function koUser() {
 | 서재가 비어 있음 | 정상 — 문서를 직접 엽니다 |
 | 목록만 지우고 싶음 | 서재에서 제거 (원본 파일 유지) |
 | TXT/MD가 비어 보임 | 파일 내용 확인 (빈 파일은 안내만 표시) |
+| 사이드바 저장 실패 | **재시도** 클릭 · 동기 폴더 권한 확인 |
 
 ## 단축키
 
@@ -584,7 +617,13 @@ npm run test:loaders
 npm run electron:build:win
 \`\`\`
 
-결과물: \`release/온점-<version>-win-x64.exe\`, portable, \`win-unpacked/\`.
+결과물 (\`package.json\` \`artifactName\` 기준):
+
+| 경로 | 설명 |
+|------|------|
+| \`release/Onjeom-<version>-win-x64.exe\` | NSIS 설치본 |
+| \`release/Onjeom-<version>-win-portable.exe\` | 포터블 |
+| \`release/win-unpacked/온점.exe\` | 언팩 (제품명 **온점**) |
 
 \`\`\`bash
 npm run dev
@@ -605,6 +644,8 @@ npm run dev
 | 명령 | 용도 |
 |------|------|
 | \`npm run typecheck\` | TypeScript |
+| \`npm run test:unit\` | **vitest** 유닛 (\`src/lib/__tests__\`) |
+| \`npm run test:coverage\` | vitest + 커버리지 |
 | \`npm run test:loaders\` | 인코딩 / PDF 헤더 / DOCX / base64 |
 | \`npm run test:formats\` | PDF/EPUB/DOCX/PPTX/HTML 픽스처 생성·실험 |
 | \`npm run smoke:packaged\` | 패키지 EXE 기동 (빈 UI 가드) |
@@ -613,6 +654,7 @@ npm run dev
 
 \`\`\`bash
 npm run typecheck
+npm run test:unit
 npm run test:loaders
 npm run test:formats
 npm run smoke:packaged
@@ -621,7 +663,10 @@ npm run test:e2e
 npm run release:win
 \`\`\`
 
-> **Playwright** 는 개발자/CI용 **점검 도구**입니다. 일반 사용자 기능이 아닙니다.
+CI: \`main\` push/PR → \`.github/workflows/test.yml\` (typecheck + loaders + coverage).  
+태그 \`v*\` push → \`.github/workflows/build-desktop.yml\` 이 Windows/Linux/Android 빌드 후 GitHub Release 생성.
+
+> **Playwright / vitest** 는 개발자/CI용 **점검 도구**입니다. 일반 사용자 기능이 아닙니다.
 
 ## Linux / Android
 
@@ -633,11 +678,14 @@ npm run android:sync && npm run android:open
 
 ## 릴리스
 
+권장: 태그 \`vX.Y.Z\` 푸시 → Actions가 산출물을 Release에 첨부.
+
 \`\`\`bash
 npm run release:win
 git tag -a vX.Y.Z -m "…"
-git push origin main --tags
-gh release create vX.Y.Z release/*-win* --title "…" --notes "…"
+git push origin main refs/tags/vX.Y.Z
+# 또는 수동:
+gh release create vX.Y.Z release/Onjeom-*-win* --title "…" --notes "…"
 \`\`\`
 
 ## 문서 동기화 · 스크린샷
@@ -666,7 +714,7 @@ function genericReadme(lang) {
   return `# ${m.title}
 
 **v${VERSION}** · Multi-format document viewer with freehand annotation.  
-**License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
+**License:** MIT · **Repo:** [${REPO}](${REPO_URL})
 
 - [User guide](./USER_GUIDE.md)
 - [Build](./BUILD.md)
@@ -682,8 +730,8 @@ ${FORMATS_TABLE_EN}
 
 ## Install (Windows)
 
-1. [Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v${VERSION}+**
-2. Installer or portable EXE
+1. [Releases](${RELEASES_URL}) → **v${VERSION}+**
+2. Installer (\`Onjeom-*-win-x64.exe\`) or portable (\`Onjeom-*-win-portable.exe\`)
 3. **Open** / \`Ctrl+O\` — MD, TXT, HTML, PDF, DOCX, PPTX, EPUB, …
 
 Library starts **empty** (no sample books).
@@ -752,6 +800,8 @@ ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · 
 ## Features (v${VERSION})
 
 - **Encrypted PDF** open (password) · export PDF with optional open-password  
+- **Ink never rewrites the source file** — sidecar/device storage; export = new PDF only  
+- **Sync status** in sidebar (saving / saved / failed + Retry)  
 - **TOC** jumps to page/heading  
 - **Library remove** = list only (disk file kept)  
 - **MD/HTML/DOCX → PDF** export keeps Hangul/CJK  
@@ -768,6 +818,7 @@ ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · 
 | PDF export CJK garble | Use **v${VERSION}+** |
 | Empty library | Normal — open a file |
 | Remove from list | Does not delete disk file |
+| Save failed | Click **Retry**; check sync folder |
 
 ← [Overview](./README.md) · [Build](./BUILD.md)
 `;
@@ -789,6 +840,7 @@ npm run electron:build:win
 
 \`\`\`bash
 npm run typecheck
+npm run test:unit         # vitest
 npm run test:loaders
 npm run test:formats
 npm run smoke:packaged
@@ -796,7 +848,10 @@ npm run test:e2e          # Playwright — developer QA only
 npm run release:win       # full gate
 \`\`\`
 
-> **Playwright** is for verification only. It is not an end-user app feature.
+Artifacts: \`release/Onjeom-*-win-x64.exe\`, \`Onjeom-*-win-portable.exe\`, \`win-unpacked/온점.exe\`.  
+Repo: [${REPO}](${REPO_URL})
+
+> **Playwright / vitest** are for verification only. Not end-user features.
 
 Critical: production UI uses \`onjeom://app/\`, not raw \`file://\` asar.  
 Open-file IPC always sends base64(raw bytes).

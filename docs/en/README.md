@@ -1,7 +1,7 @@
 # Onjeom — English
 
 Multi-format document viewer with freehand annotation.  
-**License:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)  
+**License:** MIT · **Repo:** [simhanson123/Onjeom_Doc_Viewer](https://github.com/simhanson123/Onjeom_Doc_Viewer)  
 **Current release:** v0.4.11
 
 - [User guide](./USER_GUIDE.md)
@@ -23,10 +23,13 @@ Multi-format document viewer with freehand annotation.
 - **Formats:** MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB  
 - **Encrypted PDF:** open with password; export annotated PDF **with** optional open-password  
 - **Export PDF** from MD/HTML/DOCX keeps Hangul/CJK (canvas path — not broken Helvetica)  
+- **Annotations never rewrite the source file** — ink is sidecar/device storage; export merges into a **new** PDF only  
+- **Sync status** in the sidebar footer (saving / saved / failed + **Retry**)  
 - **Contents (TOC)** jumps to page/heading  
 - **Library remove** removes from the in-app list only — **never deletes** the original file on disk  
 - **20 UI languages** · world-script body fonts  
-- Empty library at start (no sample books)
+- Empty library at start (no sample books)  
+- **QA (developers):** vitest unit suite · GitHub Actions tests + coverage badge
 
 ## Screenshots — reading themes (colors)
 
@@ -61,8 +64,8 @@ Open with **Open** / `Ctrl+O` or drag-and-drop. Use **All files** for unusual ex
 
 ## Install (Windows)
 
-1. Open [Releases](https://github.com/simhanson123/Doc_Viewer/releases) (**v0.4.11+**).
-2. Download installer (`*-win-x64.exe`) or portable (`*-win-portable.exe`).
+1. Open [Releases](https://github.com/simhanson123/Onjeom_Doc_Viewer/releases) (**v0.4.11+**).
+2. Download installer (`Onjeom-*-win-x64.exe`) or portable (`Onjeom-*-win-portable.exe`).
 3. Run → **Open** or `Ctrl+O` → MD / TXT / HTML / PDF / DOCX / PPTX / EPUB.
 
 > Prefer **v0.4.11 or newer**. Builds 0.4.0–0.4.1 had PDF path/worker issues; use current release.

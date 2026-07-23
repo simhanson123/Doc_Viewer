@@ -14,6 +14,8 @@ ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · 
 ## Features (v0.4.11)
 
 - **Encrypted PDF** open (password) · export PDF with optional open-password  
+- **Ink never rewrites the source file** — sidecar/device storage; export = new PDF only  
+- **Sync status** in sidebar (saving / saved / failed + Retry)  
 - **TOC** jumps to page/heading  
 - **Library remove** = list only (disk file kept)  
 - **MD/HTML/DOCX → PDF** export keeps Hangul/CJK  
@@ -30,5 +32,6 @@ ASCII · UTF-8 · UTF-16 · Windows-1252 · EUC-KR/CP949 · Shift_JIS · GBK · 
 | PDF export CJK garble | Use **v0.4.11+** |
 | Empty library | Normal — open a file |
 | Remove from list | Does not delete disk file |
+| Save failed | Click **Retry**; check sync folder |
 
 ← [Overview](./README.md) · [Build](./BUILD.md)

@@ -19,7 +19,13 @@ npm run test:loaders
 npm run electron:build:win
 ```
 
-결과물: `release/온점-<version>-win-x64.exe`, portable, `win-unpacked/`.
+결과물 (`package.json` `artifactName` 기준):
+
+| 경로 | 설명 |
+|------|------|
+| `release/Onjeom-<version>-win-x64.exe` | NSIS 설치본 |
+| `release/Onjeom-<version>-win-portable.exe` | 포터블 |
+| `release/win-unpacked/온점.exe` | 언팩 (제품명 **온점**) |
 
 ```bash
 npm run dev
@@ -40,6 +46,8 @@ npm run dev
 | 명령 | 용도 |
 |------|------|
 | `npm run typecheck` | TypeScript |
+| `npm run test:unit` | **vitest** 유닛 (`src/lib/__tests__`) |
+| `npm run test:coverage` | vitest + 커버리지 |
 | `npm run test:loaders` | 인코딩 / PDF 헤더 / DOCX / base64 |
 | `npm run test:formats` | PDF/EPUB/DOCX/PPTX/HTML 픽스처 생성·실험 |
 | `npm run smoke:packaged` | 패키지 EXE 기동 (빈 UI 가드) |
@@ -48,6 +56,7 @@ npm run dev
 
 ```bash
 npm run typecheck
+npm run test:unit
 npm run test:loaders
 npm run test:formats
 npm run smoke:packaged
@@ -56,7 +65,10 @@ npm run test:e2e
 npm run release:win
 ```
 
-> **Playwright** 는 개발자/CI용 **점검 도구**입니다. 일반 사용자 기능이 아닙니다.
+CI: `main` push/PR → `.github/workflows/test.yml` (typecheck + loaders + coverage).  
+태그 `v*` push → `.github/workflows/build-desktop.yml` 이 Windows/Linux/Android 빌드 후 GitHub Release 생성.
+
+> **Playwright / vitest** 는 개발자/CI용 **점검 도구**입니다. 일반 사용자 기능이 아닙니다.
 
 ## Linux / Android
 
@@ -68,11 +80,14 @@ npm run android:sync && npm run android:open
 
 ## 릴리스
 
+권장: 태그 `vX.Y.Z` 푸시 → Actions가 산출물을 Release에 첨부.
+
 ```bash
 npm run release:win
 git tag -a vX.Y.Z -m "…"
-git push origin main --tags
-gh release create vX.Y.Z release/*-win* --title "…" --notes "…"
+git push origin main refs/tags/vX.Y.Z
+# 또는 수동:
+gh release create vX.Y.Z release/Onjeom-*-win* --title "…" --notes "…"
 ```
 
 ## 문서 동기화 · 스크린샷

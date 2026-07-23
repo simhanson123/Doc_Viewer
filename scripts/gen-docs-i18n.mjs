@@ -363,7 +363,7 @@ for (const L of langs) {
   const readme = `# ${L.name} — ${L.lang}
 
 ${L.overview}  
-**${L.license}:** MIT · **Repo:** [simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
+**${L.license}:** MIT · **Repo:** [simhanson123/Onjeom_Doc_Viewer](https://github.com/simhanson123/Onjeom_Doc_Viewer)
 
 - [${L.ugTitle}](./USER_GUIDE.md)
 - [${L.buildTitle}](./BUILD.md)

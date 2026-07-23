@@ -44,8 +44,10 @@ jobs:
             release/*.tar.gz
             release/latest-linux.yml
 
+  # Android is still "in progress" product-wise; do not block desktop release.
   android-debug:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,7 +57,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - uses: android-actions/setup-android@v3
       - run: npm ci
       - run: npm run build:android-web
@@ -66,9 +68,10 @@ jobs:
           name: onjeom-android-debug
           path: android/app/build/outputs/apk/debug/*.apk
 
-  # Tag push (v*) → create/update the GitHub Release with all build outputs
+  # Tag push (v*) → create/update the GitHub Release with desktop (and optional Android) outputs.
+  # windows + linux must succeed; android may fail (continue-on-error).
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.windows.result == 'success' && needs.linux.result == 'success'
     needs: [windows, linux, android-debug]
     runs-on: ubuntu-latest
     permissions:
@@ -78,7 +81,36 @@ jobs:
         with:
           merge-multiple: true
           path: release-assets
+      - name: List release assets
+        run: ls -laR release-assets || true
       - uses: softprops/action-gh-release@v2
         with:
           files: release-assets/**
           generate_release_notes: true
+          fail_on_unmatched_files: false
+          name: ${{ github.ref_name }} — Onjeom desktop
+          body: |
+            ## Onjeom ${{ github.ref_name }}
+
+            Multi-format document viewer with freehand annotation (Windows · Linux · Android WIP).
+
+            ### Highlights
+            - Formats: **MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB**
+            - Encrypted PDF open · password-protected annotated PDF export
+            - Hangul/CJK-safe PDF export (canvas path)
+            - Annotations never rewrite the source file (sidecar + export merges into a new PDF)
+            - Sidebar sync status (saving / saved / failed + Retry)
+            - TOC navigation · library remove without deleting disk files
+            - 20 UI languages · vitest + CI coverage
+
+            ### Windows
+            - **Onjeom-*-win-x64.exe** — NSIS installer
+            - **Onjeom-*-win-portable.exe** — portable
+
+            ### Linux (x64)
+            - **Onjeom-*-linux-x86_64.AppImage**
+            - **Onjeom-*-linux-amd64.deb**
+            - **Onjeom-*-linux-x64.tar.gz**
+
+            Use **${{ github.ref_name }} or newer**.
+            Docs: [README](https://github.com/simhanson123/Onjeom_Doc_Viewer#readme) · [docs/en](https://github.com/simhanson123/Onjeom_Doc_Viewer/tree/main/docs/en)

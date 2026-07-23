@@ -17,6 +17,7 @@ Repository: [github.com/simhanson123/Onjeom_Doc_Viewer](https://github.com/simha
 > - Formats: **MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB**  
 > - **Encrypted PDF** open (password) · export annotated PDF with optional open-password  
 > - MD/HTML/DOCX → PDF export keeps Hangul/CJK (canvas, not broken Helvetica)  
+> - **Ink never rewrites the source** · sidebar **sync status** + Retry  
 > - **Contents (TOC)** jumps to page/heading  
 > - **Library remove** from list only — never deletes files on disk  
 > - **20 UI languages** · empty library at start (no sample books)
@@ -82,7 +83,7 @@ Each language folder includes `README.md`, `USER_GUIDE.md`, and `BUILD.md` for *
 
 ### Download
 
-[GitHub Releases](https://github.com/simhanson123/Doc_Viewer/releases) → **v0.4.11+**
+[GitHub Releases](https://github.com/simhanson123/Onjeom_Doc_Viewer/releases) → **v0.4.11+**
 
 ### Build
 
@@ -98,9 +99,9 @@ npm run release:win           # full release gate
 
 | Output | Description |
 |--------|-------------|
-| `release/온점-*-win-x64.exe` | NSIS installer |
-| `release/온점-*-win-portable.exe` | Portable |
-| `release/win-unpacked/온점.exe` | Unpacked |
+| `release/Onjeom-*-win-x64.exe` | NSIS installer |
+| `release/Onjeom-*-win-portable.exe` | Portable |
+| `release/win-unpacked/온점.exe` | Unpacked (product name **온점**) |
 
 ### Develop
 
@@ -136,6 +137,8 @@ See [docs/en/BUILD.md](./docs/en/BUILD.md).
 - Reading: single · spread · scroll · reflow  
 - Themes: cream · white · dark · sepia · night  
 - Annotation + undo/redo + local auto-save  
+- **Ink never rewrites the source file** (sidecar/device; export merges into a **new** PDF only)  
+- **Sync status** in sidebar (saving / saved / failed + **Retry**)  
 - Export: annotated PDF · **password-protected PDF** · PNG · JSON  
 - **Open encrypted PDFs** (password dialog)  
 - **TOC / Contents** navigation  
@@ -144,6 +147,7 @@ See [docs/en/BUILD.md](./docs/en/BUILD.md).
 - **20 UI languages** (Settings → Language)  
 - World-script reading fonts  
 - **No sample documents** — empty library until you open a file  
+- **QA:** vitest unit suite · GitHub Actions tests + coverage badge  
 
 ---
 

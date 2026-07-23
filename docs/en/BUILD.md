@@ -19,7 +19,13 @@ npm run test:loaders
 npm run electron:build:win
 ```
 
-Output: `release/온점-<version>-win-x64.exe`, portable, and `win-unpacked/`.
+Output (names from `package.json` `artifactName`):
+
+| Path | Description |
+|------|-------------|
+| `release/Onjeom-<version>-win-x64.exe` | NSIS installer |
+| `release/Onjeom-<version>-win-portable.exe` | Portable |
+| `release/win-unpacked/온점.exe` | Unpacked (product name **온점**) |
 
 ```bash
 npm run dev
@@ -58,6 +64,8 @@ These commands **check** the app. They are **not** features shipped inside the u
 | Command | Purpose |
 |---------|---------|
 | `npm run typecheck` | TypeScript |
+| `npm run test:unit` | **vitest** unit suite (`src/lib/__tests__`) |
+| `npm run test:coverage` | vitest + coverage report / badge input |
 | `npm run test:loaders` | Encoding / PDF header / DOCX / base64 offline |
 | `npm run test:formats` | Generate + exercise PDF/EPUB/DOCX/PPTX/HTML fixtures |
 | `npm run smoke:packaged` | Boot packaged EXE (blank-UI guard) |
@@ -66,6 +74,7 @@ These commands **check** the app. They are **not** features shipped inside the u
 
 ```bash
 npm run typecheck
+npm run test:unit
 npm run test:loaders
 npm run test:formats
 npm run smoke:packaged
@@ -74,7 +83,10 @@ npm run test:e2e
 npm run release:win
 ```
 
-> **Playwright** is a **QA tool** for developers/CI. End users do not need it and it is not an in-app feature.
+CI: `.github/workflows/test.yml` runs typecheck + loaders + coverage on every `main` push/PR.  
+Tag push `v*` → `.github/workflows/build-desktop.yml` builds Windows/Linux/Android and publishes a GitHub Release.
+
+> **Playwright / vitest** are **QA tools** for developers/CI. End users do not need them and they are not in-app features.
 
 ## Linux / Android
 
@@ -86,11 +98,14 @@ npm run android:sync && npm run android:open
 
 ## Releases
 
+Preferred: push tag `vX.Y.Z` so GitHub Actions attaches built artifacts.
+
 ```bash
 npm run release:win
 git tag -a vX.Y.Z -m "…"
-git push origin main --tags
-gh release create vX.Y.Z release/*-win* --title "…" --notes "…"
+git push origin main refs/tags/vX.Y.Z
+# or manual assets:
+gh release create vX.Y.Z release/Onjeom-*-win* --title "…" --notes "…"
 ```
 
 ## Docs sync & screenshots
