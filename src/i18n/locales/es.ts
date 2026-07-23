@@ -186,6 +186,12 @@ const es: Messages = {
   emptyDoc: 'Sin documento',
   sideNoteAuto: 'Guardado automático de notas',
   notSet: '(sin definir)',
+  annStorageNote:
+    'La tinta y los resaltados nunca se incrustan en el archivo original: se guardan aparte (sidecar de Onjeom / este dispositivo) y solo se combinan en un PDF nuevo al exportar. Los originales nunca se modifican ni se eliminan.',
+  syncSaving: 'Guardando…',
+  syncSaved: 'Guardado',
+  syncError: 'Error al guardar',
+  syncRetry: 'Reintentar',
 };
 
 export default es;

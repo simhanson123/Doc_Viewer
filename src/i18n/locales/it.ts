@@ -186,6 +186,12 @@ const it: Messages = {
   emptyDoc: 'Nessun documento',
   sideNoteAuto: 'Salvataggio automatico annotazioni',
   notSet: '(non impostato)',
+  annStorageNote:
+    "Inchiostro ed evidenziazioni non vengono mai incorporati nel file originale: sono salvati a parte (sidecar Onjeom / questo dispositivo) e uniti in un nuovo PDF solo all'esportazione. Gli originali non vengono mai modificati né eliminati.",
+  syncSaving: 'Salvataggio…',
+  syncSaved: 'Salvato',
+  syncError: 'Salvataggio non riuscito',
+  syncRetry: 'Riprova',
 };
 
 export default it;

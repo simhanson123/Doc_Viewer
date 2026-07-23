@@ -185,6 +185,12 @@ const zhHant: Messages = {
   emptyDoc: '沒有文件',
   sideNoteAuto: '註記自動儲存',
   notSet: '（未設定）',
+  annStorageNote:
+    '筆跡與螢光標記不會嵌入原始檔案 — 它們單獨儲存（Onjeom 側車檔/本裝置），僅在匯出時合併為新 PDF。原始檔案絕不會被修改或刪除。',
+  syncSaving: '儲存中…',
+  syncSaved: '已儲存',
+  syncError: '儲存失敗',
+  syncRetry: '重試',
 };
 
 export default zhHant;

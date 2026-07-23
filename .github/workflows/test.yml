@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Loader smoke tests
+        run: npm run test:loaders
+      - name: Unit tests + coverage
+        run: npm run test:coverage
+      - name: Generate coverage badge
+        run: node scripts/coverage-badge.mjs
+      - name: Commit coverage badge (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/badges/coverage.svg
+          git diff --cached --quiet || (git commit -m "ci: update coverage badge [skip ci]" && git push)

@@ -1326,6 +1326,17 @@ function AppShell({
                 </div>
               )}
               <div className="side-label">{t('export')}</div>
+              <div
+                style={{
+                  fontSize: 10.5,
+                  color: theme.muted,
+                  margin: '2px 8px 8px',
+                  lineHeight: 1.55,
+                }}
+                data-testid="ann-storage-note"
+              >
+                {t('annStorageNote')}
+              </div>
               <div className="export-btns">
                 <button type="button" className="open-btn block" onClick={() => void exportPdf()}>
                   {t('exportPdfAnn')}
@@ -1349,11 +1360,33 @@ function AppShell({
                 </button>
               </div>
             </div>
-            <div className="sidebar-foot" style={{ borderColor: theme.chromeBorder }}>
-              {t('sideNoteAuto')}
-              {settings.annSyncFolder
-                ? ` · ${t('autoSaveFolder')} ${annApi.syncStatus === 'ok' ? '✓' : annApi.syncStatus === 'saving' ? '…' : ''}`
-                : ` · ${t('autoSaveLocal')}`}
+            <div
+              className="sidebar-foot"
+              style={{ borderColor: theme.chromeBorder }}
+              data-testid="sync-state"
+            >
+              {t('sideNoteAuto')} ·{' '}
+              {settings.annSyncFolder ? t('autoSaveFolder') : t('autoSaveLocal')}
+              {settings.annSyncFolder && annApi.syncStatus !== 'idle' && (
+                <>
+                  {' · '}
+                  {annApi.syncStatus === 'saving'
+                    ? t('syncSaving')
+                    : annApi.syncStatus === 'error'
+                      ? t('syncError')
+                      : `${t('syncSaved')} ✓`}
+                  {annApi.syncStatus === 'error' && (
+                    <button
+                      type="button"
+                      className="mini-icon"
+                      style={{ marginLeft: 6, textDecoration: 'underline' }}
+                      onClick={() => annApi.syncNow()}
+                    >
+                      {t('syncRetry')}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </aside>
         )}

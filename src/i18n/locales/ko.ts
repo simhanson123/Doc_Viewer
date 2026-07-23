@@ -187,6 +187,12 @@ const ko: Messages = {
   emptyDoc: '문서가 없습니다',
   sideNoteAuto: '필기 자동 저장',
   notSet: '(설정 안 됨)',
+  annStorageNote:
+    '필기·하이라이트는 원본 파일에 저장되지 않습니다 — 별도 보관(온점 사이드카/이 기기)되며, 내보내기 시에만 새 PDF로 병합됩니다. 원본은 절대 수정·삭제되지 않습니다.',
+  syncSaving: '저장 중…',
+  syncSaved: '저장됨',
+  syncError: '저장 실패',
+  syncRetry: '재시도',
 };
 
 export default ko;

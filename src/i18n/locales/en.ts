@@ -187,6 +187,12 @@ const en: Messages = {
   emptyDoc: 'No document',
   sideNoteAuto: 'Annotations auto-save',
   notSet: '(not set)',
+  annStorageNote:
+    'Ink & highlights are never embedded in the original file — they are stored separately (Onjeom sidecar / this device) and merged into a new PDF only on export. Originals are never modified or deleted.',
+  syncSaving: 'Saving…',
+  syncSaved: 'Saved',
+  syncError: 'Save failed',
+  syncRetry: 'Retry',
 };
 
 export default en;

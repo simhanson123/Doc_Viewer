@@ -22,6 +22,8 @@
     "android:open": "npx cap open android",
     "android:run": "npm run android:sync && npx cap run android",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:loaders": "node scripts/test-loaders.mjs",
     "test:formats": "node scripts/gen-fixtures.mjs && node scripts/experiment-formats.mjs",
     "gen:fixtures": "node scripts/gen-fixtures.mjs",
@@ -124,6 +126,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",

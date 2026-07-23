@@ -55,33 +55,40 @@ export function useAnnotations(
     }
   }, [annStore]);
 
-  // folder / native sync (debounced)
+  // folder / native sync (debounced) — explicit status + manual retry
+  const doSync = useCallback(async (folder: string | null | undefined) => {
+    setSyncStatus('saving');
+    try {
+      for (const [id, ann] of Object.entries(storeRef.current)) {
+        await platformWriteAnn(
+          folder || 'android-data',
+          id,
+          JSON.stringify({
+            key: id,
+            version: 1,
+            updatedAt: new Date().toISOString(),
+            annotations: ann,
+          }),
+        );
+      }
+      setSyncStatus('ok');
+    } catch {
+      setSyncStatus('error');
+    }
+  }, []);
+
   useEffect(() => {
     if (!opts?.autoSync) return;
     const folder = opts.syncFolder;
     if (!folder && !isAndroid()) return;
-    const t = window.setTimeout(async () => {
-      setSyncStatus('saving');
-      try {
-        for (const [id, ann] of Object.entries(annStore)) {
-          await platformWriteAnn(
-            folder || 'android-data',
-            id,
-            JSON.stringify({
-              key: id,
-              version: 1,
-              updatedAt: new Date().toISOString(),
-              annotations: ann,
-            }),
-          );
-        }
-        setSyncStatus('ok');
-      } catch {
-        setSyncStatus('error');
-      }
-    }, 900);
+    const t = window.setTimeout(() => void doSync(folder), 900);
     return () => clearTimeout(t);
-  }, [annStore, opts?.autoSync, opts?.syncFolder]);
+  }, [annStore, opts?.autoSync, opts?.syncFolder, doSync]);
+
+  /** Manual re-sync (retry after failure). */
+  const syncNow = useCallback(() => {
+    void doSync(opts?.syncFolder);
+  }, [doSync, opts?.syncFolder]);
 
   const importFolder = useCallback(async (folder: string | null) => {
     try {
@@ -286,6 +293,7 @@ export function useAnnotations(
     hist,
     redo,
     syncStatus,
+    syncNow,
     pushHist,
     undo,
     redoAct,

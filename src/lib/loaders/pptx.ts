@@ -6,7 +6,7 @@ import JSZip from 'jszip';
 import type { ContentBlock, DocumentModel, PageContent, TocItem } from '@/types';
 import { splitSentences } from '@/lib/sentences';
 
-function xmlTextNodes(xml: string): string[] {
+export function xmlTextNodes(xml: string): string[] {
   const out: string[] = [];
   // OOXML DrawingML text: <a:t>...</a:t>
   const re = /<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/gi;

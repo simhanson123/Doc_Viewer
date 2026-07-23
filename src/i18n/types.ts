@@ -205,7 +205,12 @@ export type MessageKey =
   | 'searchPlaceholder'
   | 'emptyDoc'
   | 'sideNoteAuto'
-  | 'notSet';
+  | 'notSet'
+  | 'annStorageNote'
+  | 'syncSaving'
+  | 'syncSaved'
+  | 'syncError'
+  | 'syncRetry';
 
 export type Messages = Record<MessageKey, string>;
 

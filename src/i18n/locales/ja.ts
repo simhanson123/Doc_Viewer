@@ -186,6 +186,12 @@ const ja: Messages = {
   emptyDoc: '文書がありません',
   sideNoteAuto: '注釈を自動保存',
   notSet: '（未設定）',
+  annStorageNote:
+    '手書き・ハイライトは元ファイルには保存されません — 別途保管（Onjeomサイドカー/この端末）され、書き出し時のみ新しいPDFに統合されます。元ファイルは決して変更・削除されません。',
+  syncSaving: '保存中…',
+  syncSaved: '保存済み',
+  syncError: '保存失敗',
+  syncRetry: '再試行',
 };
 
 export default ja;

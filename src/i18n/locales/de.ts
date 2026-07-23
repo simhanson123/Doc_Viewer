@@ -186,6 +186,12 @@ const de: Messages = {
   emptyDoc: 'Kein Dokument',
   sideNoteAuto: 'Notizen auto-speichern',
   notSet: '(nicht gesetzt)',
+  annStorageNote:
+    'Tinte & Markierungen werden nie in die Originaldatei eingebettet — sie werden separat gespeichert (Onjeom-Sidecar / dieses Gerät) und nur beim Export in ein neues PDF zusammengeführt. Originale werden nie verändert oder gelöscht.',
+  syncSaving: 'Speichern…',
+  syncSaved: 'Gespeichert',
+  syncError: 'Speichern fehlgeschlagen',
+  syncRetry: 'Erneut versuchen',
 };
 
 export default de;

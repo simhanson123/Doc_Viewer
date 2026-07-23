@@ -2,14 +2,16 @@
 
 **MIT License** · Multi-format document viewer with freehand annotation.
 
-[![Release](https://img.shields.io/github/v/release/simhanson123/Doc_Viewer)](https://github.com/simhanson123/Doc_Viewer/releases)
+[![Release](https://img.shields.io/github/v/release/simhanson123/Onjeom_Doc_Viewer)](https://github.com/simhanson123/Onjeom_Doc_Viewer/releases)
+[![Tests](https://github.com/simhanson123/Onjeom_Doc_Viewer/actions/workflows/test.yml/badge.svg)](https://github.com/simhanson123/Onjeom_Doc_Viewer/actions/workflows/test.yml)
+[![Coverage](./docs/badges/coverage.svg)](https://github.com/simhanson123/Onjeom_Doc_Viewer/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 Read **Markdown, HTML, PDF, EPUB, DOCX, PPTX, and plain text** (ASCII, UTF-8, and many legacy encodings), then annotate with pen, stylus pressure, highlighter, shapes, and sticky notes.
 
 **Primary target:** Windows · also Linux & Android (in progress).
 
-Repository: [github.com/simhanson123/Doc_Viewer](https://github.com/simhanson123/Doc_Viewer)
+Repository: [github.com/simhanson123/Onjeom_Doc_Viewer](https://github.com/simhanson123/Onjeom_Doc_Viewer)
 
 > **Current release: v0.4.10** — use **v0.4.10 or newer**.  
 > - Formats: **MD · TXT/ASC · HTML · PDF · DOCX · PPTX · EPUB**  

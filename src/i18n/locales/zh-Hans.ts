@@ -185,6 +185,12 @@ const zhHans: Messages = {
   emptyDoc: '没有文档',
   sideNoteAuto: '批注自动保存',
   notSet: '（未设置）',
+  annStorageNote:
+    '笔迹与高亮不会嵌入原始文件 — 它们单独保存（Onjeom 边车文件/本设备），仅在导出时合并为新 PDF。原始文件绝不会被修改或删除。',
+  syncSaving: '保存中…',
+  syncSaved: '已保存',
+  syncError: '保存失败',
+  syncRetry: '重试',
 };
 
 export default zhHans;

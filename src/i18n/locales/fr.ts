@@ -186,6 +186,12 @@ const fr: Messages = {
   emptyDoc: 'Aucun document',
   sideNoteAuto: 'Enregistrement auto des notes',
   notSet: '(non défini)',
+  annStorageNote:
+    "L'encre et les surlignages ne sont jamais intégrés au fichier d'origine : ils sont stockés à part (sidecar Onjeom / cet appareil) et fusionnés dans un nouveau PDF uniquement à l'export. Les originaux ne sont jamais modifiés ni supprimés.",
+  syncSaving: 'Enregistrement…',
+  syncSaved: 'Enregistré',
+  syncError: "Échec de l'enregistrement",
+  syncRetry: 'Réessayer',
 };
 
 export default fr;
